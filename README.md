@@ -1,50 +1,50 @@
-# Fire Game & Watch Remake
+# 🚒 Fire Game & Watch Remake
 
-A modern remake of the classic Game & Watch Fire game for the Playdate console.
+A modern remake of the classic Game & Watch Fire game for the Playdate console. Save victims from a burning building in this physics-based action game! 🎮
 
-## Features
+## ✨ Features
 
-- Physics-based gameplay with dynamic bounce mechanics
-- Edge-based bouncing system for strategic play
-- Progressive difficulty scaling
-- Classic black and white aesthetic
-- Crank-based controls
-- High score tracking
+- 🎯 Physics-based gameplay with dynamic bounce mechanics
+- 🌟 Edge-based bouncing system for strategic play
+- 📈 Progressive difficulty scaling
+- 🎨 Classic black and white aesthetic
+- 🎪 Crank-based controls
+- 🏆 High score tracking
 
-## Gameplay
+## 🎮 Gameplay
 
 Help rescue victims from a burning building:
-1. Use the crank to move firefighters left and right
-2. Catch falling victims with the trampoline
-3. Bounce them toward the ambulance
-4. Score increases with each successful rescue
-5. Game ends when you lose all lives
+1. 🎪 Use the crank to move firefighters left and right
+2. 🛟 Catch falling victims with the trampoline
+3. 🚑 Bounce them toward the ambulance
+4. ⭐ Score increases with each successful rescue
+5. ❌ Game ends when you lose all lives
 
-### Controls
-- **Crank**: Move firefighters left/right
-- **A Button**: Start game / Menu selection
-- **B Button**: Pause/Resume game
+### 🕹️ Controls
+- **🎪 Crank**: Move firefighters left/right
+- **🅰️ A Button**: Start game / Menu selection
+- **🅱️ B Button**: Pause/Resume game
 
-### Mechanics
-- Edge hits provide stronger horizontal momentum
-- Minimum bounce velocity ensures ambulance reach
-- Progressive difficulty (second victim at 500 points)
-- Immediate victim respawn after rescue/loss
+### ⚙️ Mechanics
+- 💫 Edge hits provide stronger horizontal momentum
+- ⚡ Minimum bounce velocity ensures ambulance reach
+- 📈 Progressive difficulty (second victim at 500 points)
+- 🔄 Immediate victim respawn after rescue/loss
 
-## Development
+## 🛠️ Development
 
-### Requirements
-- Playdate SDK
-- Lua development environment
-- VSCode (recommended)
+### 📋 Requirements
+- 🎮 Playdate SDK
+- 🌙 Lua development environment
+- 💻 VSCode (recommended)
 
-### Setup
-1. Clone the repository
-2. Install Playdate SDK
-3. Open in VSCode
-4. Build and run using Playdate simulator
+### 🚀 Setup
+1. 📥 Clone the repository
+2. ⚙️ Install Playdate SDK
+3. 📂 Open in VSCode
+4. 🎮 Build and run using Playdate simulator
 
-### Project Structure
+### 📁 Project Structure
 ```
 source/
 ├── main.lua           # Game loop and state management
@@ -60,7 +60,7 @@ source/
 └── assets/           # Game resources
 ```
 
-### Building
+### 🏗️ Building
 ```bash
 # Build PDX file
 pdc source Fire.pdx
@@ -69,15 +69,15 @@ pdc source Fire.pdx
 playdate-simulator Fire.pdx
 ```
 
-## Technical Details
+## 🔧 Technical Details
 
-### Physics System
-- Gravity: 200 pixels/second squared
-- Edge-based bounce calculations
-- Momentum preservation
-- Position clamping
+### ⚡ Physics System
+- 🌍 Gravity: 200 pixels/second squared
+- 💫 Edge-based bounce calculations
+- ⚖️ Momentum preservation
+- 📏 Position clamping
 
-### Game Configuration
+### ⚙️ Game Configuration
 ```lua
 -- Core settings
 FPS = 30
@@ -93,29 +93,29 @@ MIN_HORIZONTAL_SPEED = 50
 RIGHT_BIAS = 30
 ```
 
-### State Management
-- Menu
-- Playing
-- Paused
-- Game Over
+### 🔄 State Management
+- 📋 Menu
+- 🎮 Playing
+- ⏸️ Paused
+- 🏁 Game Over
 
-## Contributing
+## 🤝 Contributing
 
-1. Fork the repository
-2. Create your feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
+1. 🔱 Fork the repository
+2. 🌿 Create your feature branch
+3. 💾 Commit your changes
+4. 🚀 Push to the branch
+5. 📬 Create a Pull Request
 
-## Planned Features
+## 🎯 Planned Features
 
-- [ ] Sound effects
-- [ ] Particle effects
-- [ ] Visual feedback
-- [ ] Menu transitions
-- [ ] Instructions screen
-- [ ] Statistics tracking
+- [ ] 🔊 Sound effects
+- [ ] ✨ Particle effects
+- [ ] 💫 Visual feedback
+- [ ] 🔄 Menu transitions
+- [ ] 📖 Instructions screen
+- [ ] 📊 Statistics tracking
 
-## License
+## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details.
