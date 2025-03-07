@@ -1,0 +1,10 @@
+name=Fire
+author=Cline
+description=A remake of the classic Game & Watch Fire game
+bundleID=com.cline.fire
+version=0.1
+buildNumber=1
+imagePath=assets
+contentWarning=This game contains no objectionable content
+pdxversion=20601
+buildtime=794683924
