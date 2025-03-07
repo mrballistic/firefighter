@@ -1,13 +1,19 @@
 # Active Context: Fire Game & Watch Remake
 
 ## Current Focus
-Initial project setup and documentation phase. Establishing core architecture and development patterns.
+Core gameplay implementation and visual refinement. Establishing proper game layout and version control.
 
 ## Recent Changes
-- Created initial Memory Bank documentation structure
-- Established project technical specifications
-- Defined system architecture and patterns
-- Documented development environment requirements
+- Implemented core game loop with physics and collisions
+- Adjusted game layout for better visibility
+  - Building positioned at y=160
+  - Firefighters and ambulance at y=220
+  - Score display clearly visible at top
+- Updated visual style
+  - White sprites on black background
+  - Black windows on white building
+  - Black cross on white ambulance
+- Added .gitignore for proper version control
 
 ## Active Decisions
 
@@ -26,47 +32,51 @@ Initial project setup and documentation phase. Establishing core architecture an
 ## Current Considerations
 
 ### Implementation Priorities
-1. Core game loop setup
-2. Crank input system
-3. Basic physics implementation
-4. Entity management system
-5. Rendering pipeline
+1. Sound effects for gameplay events
+2. Additional visual polish
+3. Difficulty progression
+4. High score persistence
+5. Performance optimization
 
 ### Technical Challenges
-1. Ensuring smooth crank control
-2. Optimizing collision detection
-3. Managing memory efficiently
-4. Maintaining consistent frame rate
+1. Balancing game difficulty
+2. Smooth animation transitions
+3. Sound effect timing
+4. Memory usage optimization
+5. Save state implementation
 
 ## Next Steps
 
 ### Immediate Tasks
-1. Set up development environment
-2. Create project structure
-3. Implement basic game loop
-4. Add crank input handling
-5. Create initial entity system
+1. Add sound effects for:
+   - Victim bouncing
+   - Successful rescue
+   - Game over
+2. Implement difficulty progression
+3. Add high score persistence
+4. Polish animations
+5. Add particle effects
 
 ### Upcoming Work
-1. Physics system implementation
-2. Sprite rendering system
-3. Basic UI elements
-4. Sound system setup
-5. Initial gameplay mechanics
+1. Create proper game assets
+2. Add particle effects
+3. Implement difficulty progression
+4. Add high score persistence
+5. Comprehensive testing
 
 ## Open Questions
-1. Best approach for physics optimization
-2. Memory management strategies
-3. Sprite batching implementation details
-4. Save state handling method
+1. Best approach for difficulty scaling
+2. Animation state management
+3. Sound effect prioritization
+4. Performance optimization strategies
 
 ## Risk Assessment
 
 ### Technical Risks
-1. Performance bottlenecks in physics calculations
-2. Memory constraints with multiple sprites
-3. Input latency in crank control
-4. Battery life impact
+1. Frame rate drops with many victims
+2. Memory usage with particle effects
+3. Sound latency issues
+4. Battery drain from physics calculations
 
 ### Mitigation Strategies
 1. Early performance testing

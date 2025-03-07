@@ -1,0 +1,42 @@
+# Playdate compiled files and builds
+*.pdx/
+*.pdz
+source/Fire.pdx/
+Builds/
+Support/
+
+# Playdate SDK files
+*.pdxinfo
+
+# Lua compiled files
+*.lua~
+*.luac
+
+# macOS system files
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# VSCode files
+.vscode/
+*.code-workspace
+.history/
+
+# Editor backup files
+*~
+*.bak
+*.swp
+
+# Build and dependency directories
+build/
+dist/
+node_modules/
+
+# Debug files
+*.log
+*.debug
+
+# Environment files
+.env
+.env.*
