@@ -8,8 +8,8 @@ class('Victim').extends(gfx.sprite)
 
 -- Constants for victim
 local VICTIM_SIZE <const> = 15
-local BOUNCE_DAMPING <const> = 0.7
-local HORIZONTAL_DAMPING <const> = 0.98
+local BOUNCE_DAMPING <const> = 0.8  -- Increased to preserve more momentum
+local HORIZONTAL_DAMPING <const> = 0.95  -- Slightly increased air resistance
 
 function Victim:init(x, y, velocityX, velocityY, notifyObserversFn)
     Victim.super.init(self)
@@ -66,10 +66,14 @@ function Victim:update()
     self.velocity.x = self.velocity.x * HORIZONTAL_DAMPING
     
     -- Check boundaries
-    if newY > 240 then  -- Screen height
+    if newY > 240 then  -- Bottom boundary
         -- Victim has fallen off screen
         self:onLost()
         return
+    elseif newY < 0 then  -- Top boundary
+        -- Clamp to top and reverse velocity
+        newY = 0
+        self.velocity.y = math.abs(self.velocity.y) * 0.5  -- Bounce down with reduced velocity
     end
     
     -- Update position
@@ -77,11 +81,16 @@ function Victim:update()
 end
 
 function Victim:bounce()
-    -- Reverse vertical velocity with damping
-    self.velocity.y = -self.velocity.y * BOUNCE_DAMPING
-    
-    -- Reduce horizontal velocity
+    -- Apply bounce damping to both velocities
     self.velocity.x = self.velocity.x * BOUNCE_DAMPING
+    self.velocity.y = self.velocity.y * BOUNCE_DAMPING
+    
+    -- Strong right bias and minimum speed
+    local MIN_HORIZONTAL_SPEED <const> = 50
+    local RIGHT_BIAS <const> = 30
+    
+    -- Add right bias and ensure minimum speed
+    self.velocity.x = math.max(self.velocity.x + RIGHT_BIAS, MIN_HORIZONTAL_SPEED)
 end
 
 function Victim:rescue()

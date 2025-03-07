@@ -24,9 +24,20 @@ local GameState = {
 local Config = {
     FPS = 30,
     PHYSICS_STEP = 1/30,
-    MAX_VICTIMS = 5,
-    VICTIM_SPAWN_INTERVAL = 3
+    VICTIM_SPAWN_INTERVAL = 3,
+    SCORE_PER_RESCUE = 100,  -- Score per successful rescue
+    VICTIMS_INCREASE_THRESHOLD = 500,  -- Score needed to allow 2 victims
+    INITIAL_HORIZONTAL_VELOCITY = 100  -- Initial push from building
 }
+
+-- Get maximum allowed victims based on score
+local function getMaxVictims(score)
+    if score < Config.VICTIMS_INCREASE_THRESHOLD then
+        return 1  -- Start with one victim
+    else
+        return 2  -- Allow two victims after threshold
+    end
+end
 
 -- Game state
 local gameState = {
@@ -86,10 +97,28 @@ local function updatePhysics(dt)
             local victimBounds = victim:getBounds()
             
             -- Check for collision with firefighters
-            if gameState.entities.firefighters:canCatch(victimX, victimY) then
-                -- Bounce the victim
-                local _, vy = victim:getVelocity()
-                victim:setVelocity(50, -math.abs(vy))  -- Bounce towards ambulance
+            local catchInfo = gameState.entities.firefighters:canCatch(victimX, victimY)
+            if catchInfo then
+                -- Get current velocities
+                local vx, vy = victim:getVelocity()
+                
+                -- Calculate bounce velocities based on hit position
+                local MIN_BOUNCE_VELOCITY <const> = 200  -- Minimum velocity to reach ambulance
+                local HORIZONTAL_BOOST <const> = 30      -- Base horizontal boost
+                local EDGE_BOOST <const> = 40           -- Additional boost when hitting edges
+                
+                -- Calculate hit position relative to center (-1 to 1, where 0 is center)
+                local hitPosition = catchInfo.hitPosition
+                
+                -- More horizontal velocity when hitting edges
+                local edgeBoost = math.abs(hitPosition) * EDGE_BOOST
+                local newVx = math.max(vx * 0.5, 0) + HORIZONTAL_BOOST + edgeBoost
+                
+                -- Ensure minimum upward velocity while preserving some momentum
+                local newVy = -math.max(math.abs(vy), MIN_BOUNCE_VELOCITY)
+                
+                -- Apply new velocities
+                victim:setVelocity(newVx, newVy)
                 victim:bounce()
             end
             
@@ -110,6 +139,9 @@ end
 
 -- Initialize game
 local function initGame()
+    -- Clear all sprites
+    gfx.sprite.removeAll()
+    
     -- Clear the display
     gfx.clear()
     
@@ -130,7 +162,7 @@ local function initGame()
     
     -- Set up observers
     addObserver("victimRescued", function(data)
-        gameState.score = gameState.score + 100
+        gameState.score = gameState.score + Config.SCORE_PER_RESCUE
         if gameState.score > gameState.highScore then
             gameState.highScore = gameState.score
             notifyObservers("newHighScore", gameState.highScore)
@@ -143,6 +175,8 @@ local function initGame()
             gameState.currentState = GameState.GAME_OVER
             notifyObservers("gameOver", gameState.score)
         end
+        -- Force immediate spawn of new victim after death
+        gameState.timeSinceLastSpawn = Config.VICTIM_SPAWN_INTERVAL * 2
     end)
 end
 
@@ -167,6 +201,8 @@ local function handleInput()
     -- Handle game over state
     if gameState.currentState == GameState.GAME_OVER then
         if playdate.buttonJustPressed(playdate.kButtonA) then
+            -- Clear all sprites when returning to menu
+            gfx.sprite.removeAll()
             gameState.currentState = GameState.MENU
         end
     end
@@ -207,14 +243,28 @@ function playdate.update()
         
         -- Update victim spawning
         gameState.timeSinceLastSpawn = gameState.timeSinceLastSpawn + dt
+        local maxVictims = getMaxVictims(gameState.score)
+        
+        -- Only spawn if we're below max victims and enough time has passed
         if gameState.timeSinceLastSpawn >= Config.VICTIM_SPAWN_INTERVAL and
-           #gameState.activeVictims < Config.MAX_VICTIMS then
-            -- Spawn new victim
-            local spawnX, spawnY = gameState.entities.building:getRandomSpawnPoint()
-            -- Create new victim with reference to notifyObservers
-            local newVictim = Victim(spawnX, spawnY, 50, 0, notifyObservers)  -- Initial velocity towards right
-            table.insert(gameState.activeVictims, newVictim)
-            gameState.timeSinceLastSpawn = 0
+           #gameState.activeVictims < maxVictims and
+           gameState.lives > 0 then  -- Only spawn if we have lives left
+            
+            -- Spawn new victim when none are active (after rescue or death)
+            if #gameState.activeVictims == 0 then
+                -- Reset spawn timer and create new victim
+                gameState.timeSinceLastSpawn = 0
+                local spawnX, spawnY = gameState.entities.building:getRandomSpawnPoint()
+                local newVictim = Victim(spawnX, spawnY, Config.INITIAL_HORIZONTAL_VELOCITY, 0, notifyObservers)
+                table.insert(gameState.activeVictims, newVictim)
+            -- For second victim (if allowed by score)
+            elseif maxVictims > 1 and #gameState.activeVictims == 1 then
+                -- Spawn additional victim
+                local spawnX, spawnY = gameState.entities.building:getRandomSpawnPoint()
+                local newVictim = Victim(spawnX, spawnY, Config.INITIAL_HORIZONTAL_VELOCITY, 0, notifyObservers)
+                table.insert(gameState.activeVictims, newVictim)
+                gameState.timeSinceLastSpawn = 0
+            end
         end
     end
     
@@ -225,6 +275,8 @@ function playdate.update()
     playdate.timer.updateTimers()
     
     -- Draw UI overlay
+    gfx.setImageDrawMode(gfx.kDrawModeFillWhite)  -- Ensure text is white
+    
     if gameState.currentState == GameState.MENU then
         gfx.drawText("FIRE", 180, 100)
         gfx.drawText("Press Ⓐ to Start", 150, 120)
@@ -240,6 +292,8 @@ function playdate.update()
         gfx.drawText("Final Score: " .. gameState.score, 150, 120)
         gfx.drawText("Press Ⓐ for Menu", 145, 140)
     end
+    
+    gfx.setImageDrawMode(gfx.kDrawModeCopy)  -- Reset draw mode
 end
 
 -- Set up menu state when the game first loads

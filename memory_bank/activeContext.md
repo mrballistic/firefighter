@@ -1,49 +1,55 @@
 # Active Context: Fire Game & Watch Remake
 
 ## Current Focus
-Core gameplay implementation and visual refinement. Establishing proper game layout and version control.
+Gameplay refinement and physics tuning. Polishing core mechanics and game flow.
 
 ## Recent Changes
-- Implemented core game loop with physics and collisions
-- Adjusted game layout for better visibility
-  - Building positioned at y=160
-  - Firefighters and ambulance at y=220
-  - Score display clearly visible at top
-- Updated visual style
-  - White sprites on black background
-  - Black windows on white building
-  - Black cross on white ambulance
-- Added .gitignore for proper version control
+- Improved bounce physics
+  - Edge-based bouncing for more dynamic gameplay
+  - Stronger horizontal momentum on edge hits
+  - Minimum bounce velocity to ensure ambulance reach
+- Enhanced victim spawning
+  - Immediate spawn after death or rescue
+  - Progressive difficulty (1-2 victims)
+  - Proper spawn timing and management
+- Visual and layout improvements
+  - Proper sprite cleanup between states
+  - Consistent white-on-black visuals
+  - Clear UI text rendering
+- Game flow enhancements
+  - Clean state transitions
+  - Better sprite management
+  - Proper game reset handling
 
 ## Active Decisions
 
 ### Architecture Decisions
-1. Using Entity Component System for game objects
-2. Implementing Observer pattern for game events
-3. Using Command pattern for input handling
-4. Organizing code into modular components
+1. Observer pattern for game events
+2. State-based game flow
+3. Physics-based gameplay
+4. Modular entity system
 
 ### Technical Decisions
-1. Targeting 30 FPS minimum for smooth gameplay
-2. Optimizing collision detection for performance
-3. Implementing sprite batching for efficient rendering
-4. Using memory pooling for dynamic objects
+1. Dynamic bounce physics based on hit position
+2. Progressive difficulty scaling
+3. Immediate victim respawning
+4. Clean sprite management
 
 ## Current Considerations
 
 ### Implementation Priorities
-1. Sound effects for gameplay events
-2. Additional visual polish
-3. Difficulty progression
-4. High score persistence
-5. Performance optimization
+1. Sound effects and feedback
+2. Visual polish (particles, animations)
+3. Additional gameplay features
+4. Menu system enhancements
+5. High score persistence
 
 ### Technical Challenges
-1. Balancing game difficulty
-2. Smooth animation transitions
-3. Sound effect timing
-4. Memory usage optimization
-5. Save state implementation
+1. Fine-tuning bounce physics
+2. Balancing difficulty progression
+3. Optimizing sprite management
+4. Smooth state transitions
+5. Performance optimization
 
 ## Next Steps
 
@@ -52,34 +58,38 @@ Core gameplay implementation and visual refinement. Establishing proper game lay
    - Victim bouncing
    - Successful rescue
    - Game over
-2. Implement difficulty progression
-3. Add high score persistence
-4. Polish animations
-5. Add particle effects
+2. Add visual feedback:
+   - Bounce effects
+   - Rescue celebration
+   - Score indicators
+3. Enhance menu system:
+   - Better transitions
+   - Visual polish
+   - Instructions screen
 
 ### Upcoming Work
-1. Create proper game assets
-2. Add particle effects
-3. Implement difficulty progression
-4. Add high score persistence
-5. Comprehensive testing
+1. Additional gameplay features
+2. Performance optimization
+3. Asset refinement
+4. Testing and balancing
+5. Polish and feedback
 
 ## Open Questions
-1. Best approach for difficulty scaling
-2. Animation state management
-3. Sound effect prioritization
-4. Performance optimization strategies
+1. Additional gameplay mechanics
+2. Scoring system refinements
+3. Visual effect improvements
+4. Sound design approach
 
 ## Risk Assessment
 
 ### Technical Risks
-1. Frame rate drops with many victims
-2. Memory usage with particle effects
-3. Sound latency issues
-4. Battery drain from physics calculations
+1. Physics edge cases
+2. Performance with multiple victims
+3. Memory management
+4. State transition bugs
 
 ### Mitigation Strategies
-1. Early performance testing
-2. Memory usage monitoring
-3. Input system optimization
-4. Efficient resource management
+1. Comprehensive testing
+2. Performance monitoring
+3. Clean state management
+4. Robust error handling

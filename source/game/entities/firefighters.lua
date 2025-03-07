@@ -8,7 +8,7 @@ class('Firefighters').extends(gfx.sprite)
 
 -- Constants for movement
 local SCREEN_WIDTH <const> = 400
-local MIN_X <const> = 50  -- Left boundary (near building)
+local MIN_X <const> = 80  -- Left boundary (after building width)
 local MAX_X <const> = 350 -- Right boundary (near ambulance)
 local Y_POSITION <const> = 220 -- Vertical position of firefighters (near bottom of building)
 
@@ -81,20 +81,26 @@ function Firefighters:canCatch(x, y)
     local inRange = math.abs(x - self.x) < catchWidth/2 and 
                    math.abs(y - self.y) < catchHeight/2
     
-    -- If in range, notify observers of potential catch
     if inRange then
-        -- The actual catch handling will be managed by the physics system
-        -- This just indicates the firefighters are in position to catch
-        -- Using our observer pattern instead of eventEmitter
+        -- Calculate hit position relative to center (-1 to 1)
+        local hitPosition = (x - self.x) / (catchWidth/2)
+        
+        -- Notify observers of potential catch
         self.notifyObservers("catchAttempt", {
             x = self.x,
             y = self.y,
             width = catchWidth,
-            height = catchHeight
+            height = catchHeight,
+            hitPosition = hitPosition
         })
+        
+        -- Return catch info including hit position
+        return {
+            hitPosition = hitPosition
+        }
     end
     
-    return inRange
+    return false
 end
 
 -- Handle successful catch
