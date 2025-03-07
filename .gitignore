@@ -1,12 +1,14 @@
 # Playdate compiled files and builds
-*.pdx/
-*.pdz
-source/Fire.pdx/
+**/*.pdx/
+**/*.pdz
+**/..pdx/
+source/**/Fire.pdx/
 Builds/
 Support/
 
 # Playdate SDK files
-*.pdxinfo
+**/*.pdxinfo
+source/pdxinfo
 
 # Lua compiled files
 *.lua~
