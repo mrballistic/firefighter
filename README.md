@@ -1,6 +1,6 @@
 # 🚒 Fire Game & Watch Remake
 
-A modern remake of the classic Game & Watch Fire game for the Playdate console. Save victims from a burning building in this physics-based action game! 🎮
+A modern remake of the classic Game & Watch Fire game for the [Playdate](https://play.date) console. Save victims from a burning building in this physics-based action game! 🎮
 
 ## ✨ Features
 
