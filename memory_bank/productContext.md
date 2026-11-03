@@ -1,183 +1,32 @@
-# Product Context: Fire Game & Watch Remake
+# Product Context
 
-## Game Overview
+## Core loop
+1. A victim jumps from one of 5 windows (small hop, 50–80 px/s sideways).
+2. The player slides the net under them with the crank.
+3. A catch launches them at a fixed speed (280 px/s, about 98 px high and 1.4 s in the air); the hit position sets the angle:
+   - center (h = 0): 5° from vertical, a safe "hold" that inches forward
+   - right edge (h = +1): 20°, a long throw toward the ambulance
+   - left edge (h = −1): −10°, back toward the building (which bounces them back)
+4. Reaching the ambulance scores 100 points, or 150 for an **Express** rescue in 2 bounces or fewer.
+5. A victim hitting the ground costs a life. Three lives.
 
-### Core Concept
-A modern remake of the classic Game & Watch Fire game, featuring:
-- Physics-based gameplay
-- Dynamic bounce mechanics
-- Progressive difficulty
-- Classic black and white aesthetic
+## Difficulty
+- Victims at once: 1, then 2 at 500 points, then 3 at 2,000.
+- Every 500 points: game time runs 5% faster (capped at 1.4×), and the gap between extra jumpers drops 0.25 s (from 3 s down to 1.5 s).
+- Time scaling keeps trajectories identical, so tested reachability holds at any speed.
+- **Fair spawning** (`Rules.chooseLaunch`): an extra jumper leaps only if its first landing and every other jumper's next landing are reachable at 300 px/s of crank travel plus 0.2 s of reaction time (scaled by game speed); otherwise it waits a frame and retries. Measured with `scripts/fairness.lua` at 300 px/s: the two-jumper stage went from 8.4 misses/min (68% unavoidable) to 1.2/min (0%); the three-jumper stage from 18.1/min to 3.6/min (about 1/min still unavoidable, all from clashes after the first bounce). More slack made it worse, so 300/0.2 stays.
 
-### Target Platform
-- Playdate handheld console
-- 400x240 1-bit display
-- Crank-based control system
+## Menu
+- The title is cropped from the launcher card (`scripts/make_title.py`).
+- **Attract mode:** the real scene plays behind the title. A demo player walks to each jumper's predicted landing point and aims at random between 0.2 and 0.9, so it shows short and long throws. It's silent and never scores. Demo jumpers use only the lower two windows, so their arcs stay below the menu text.
+- A blinking "Press Ⓐ to Start", then one line rotating through the high score and three hints.
+- Every UI text line has a black backing box (also in game, for the HUD and overlays).
 
-## Gameplay Mechanics
+## Feel and feedback
+- Net sags 3 px on a catch; the bounce pitch rises with hit position, so players can hear their aim.
+- Score popups ("+100", "EXPRESS +150", "MISS"), screen shake on a miss, ambulance flash on a rescue.
+- Opening the Playdate menu auto-pauses.
 
-### Core Loop
-1. Victims fall from building windows
-2. Player moves firefighters with crank
-3. Catch victims with trampoline
-4. Bounce victims toward ambulance
-5. Score points for successful rescues
-
-### Movement System
-- Crank-based horizontal movement
-- Bounded play area (x: 80-350)
-- Smooth position updates
-- Precise control for catching
-
-### Physics System
-- Gravity-based falling
-- Dynamic bounce mechanics
-- Edge-based bounce angles
-- Momentum preservation
-
-## Game Elements
-
-### Building
-- Multiple spawn windows
-- Left side of screen
-- Visual reference point
-- Spawn point management
-
-### Firefighters
-- Crank-controlled movement
-- Trampoline mechanics
-- Edge-based bouncing
-- Position constraints
-
-### Victims
-- Physics-based movement
-- Bounce mechanics
-- State management
-- Progressive spawning
-
-### Ambulance
-- Rescue zone
-- Right side position
-- Visual feedback
-- Score trigger
-
-## Progression System
-
-### Difficulty Scaling
-1. Start with single victim
-2. Unlock second victim at 500 points
-3. Immediate respawn after rescue/loss
-4. Increased challenge through speed
-
-### Scoring System
-- 100 points per rescue
-- High score tracking
-- Progressive unlocks
-- Performance feedback
-
-## Game States
-
-### Menu State
-- Title display
-- Start prompt
-- High score display
-- Clean transitions
-
-### Playing State
-- Active gameplay
-- Score display
-- Lives counter
-- Dynamic spawning
-
-### Paused State
-- Game suspension
-- Resume option
-- State preservation
-- Clear UI
-
-### Game Over State
-- Final score
-- Return to menu
-- High score update
-- Clean reset
-
-## Visual Design
-
-### Aesthetic
-- Classic Game & Watch style
-- Black and white graphics
-- Clear visual hierarchy
-- High contrast elements
-
-### UI Elements
-- Score counter (top left)
-- Lives display (top right)
-- Menu text (centered)
-- State indicators
-
-## Player Experience
-
-### Core Engagement
-- Skill-based gameplay
-- Risk/reward decisions
-- Progressive challenge
-- Score motivation
-
-### Control Feel
-- Precise crank movement
-- Responsive bouncing
-- Predictable physics
-- Clear feedback
-
-### Learning Curve
-1. Basic movement
-2. Timing catches
-3. Edge bounce mechanics
-4. Multiple victim management
-
-## Future Enhancements
-
-### Planned Features
-1. Sound Effects
-   - Bounce impacts
-   - Rescue success
-   - Game over
-   - Menu selection
-
-2. Visual Polish
-   - Particle effects
-   - Animation frames
-   - Menu transitions
-   - Rescue celebration
-
-3. Gameplay Additions
-   - Bonus scoring
-   - Special events
-   - Achievement system
-   - Challenge modes
-
-4. UI Improvements
-   - Instructions screen
-   - Settings menu
-   - Statistics tracking
-   - Visual feedback
-
-## Quality Standards
-
-### Performance
-- Consistent 30 FPS
-- Responsive controls
-- Clean state transitions
-- Efficient resource use
-
-### Polish
-- Clear visual feedback
-- Smooth animations
-- Intuitive controls
-- Clean UI
-
-### Stability
-- Proper state management
-- Memory cleanup
-- Error handling
-- Save data handling
+## Known open questions
+- How the busy stages feel on hardware now that spawning is fair.
+- Title is **Crank & Catch**, bundle ID `com.mrballistic.crankandcatch`.

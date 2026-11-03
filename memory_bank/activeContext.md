@@ -1,95 +1,23 @@
-# Active Context: Fire Game & Watch Remake
+# Active Context
 
-## Current Focus
-Gameplay refinement and physics tuning. Polishing core mechanics and game flow.
+## Current focus
+Original art and sound are in (named **Crank & Catch**). Next is a simulator playtest and balance pass.
 
-## Recent Changes
-- Improved bounce physics
-  - Edge-based bouncing for more dynamic gameplay
-  - Stronger horizontal momentum on edge hits
-  - Minimum bounce velocity to ensure ambulance reach
-- Enhanced victim spawning
-  - Immediate spawn after death or rescue
-  - Progressive difficulty (1-2 victims)
-  - Proper spawn timing and management
-- Visual and layout improvements
-  - Proper sprite cleanup between states
-  - Consistent white-on-black visuals
-  - Clear UI text rendering
-- Game flow enhancements
-  - Clean state transitions
-  - Better sprite management
-  - Proper game reset handling
+## Recent changes (2026-11)
+- Rebuilt around **bounce angle by hit position** (constant speed), tuned with `scripts/tune.lua` to speed 220, bias 8°, spread 35°.
+- Fixed: crash on first rescue (nil `dt` in sprite update), double scoring, observers duplicated per game, double removal of rescued victims, repeated catches, victims moving twice per frame and drifting while paused, missing `super.init`, an unreachable bottom window, and the right-edge ricochet loop.
+- Added: difficulty ramp, Express bonus, saved high score, synth sounds with WAV overrides, popups/shake/net sag, auto-pause, crank indicator on the menu, asset drop-in with placeholder fallback.
+- Added tests (unit, playability, headless smoke) and `scripts/build.sh`.
 
-## Active Decisions
+- Art from Claude Design: animated building, firefighters (walk cycle), victims, roof smoke; static ambulance, flash, background, launcher card and icon. All verified 1-bit with `scripts/check_art.py`.
+- Sounds: boing and splat, trimmed to WAV by `scripts/prep_sounds.py`.
 
-### Architecture Decisions
-1. Observer pattern for game events
-2. State-based game flow
-3. Physics-based gameplay
-4. Modular entity system
+- Menu redone: title art from the card, attract-mode demo, backed text. Bounce raised to 280 px/s at 5° ± 15°.
+- Found and fixed: the demo spawned the next jumper the instant the last one was rescued (its outcome handlers skipped the spawn-timer reset).
 
-### Technical Decisions
-1. Dynamic bounce physics based on hit position
-2. Progressive difficulty scaling
-3. Immediate victim respawning
-4. Clean sprite management
+- 0.3: fair spawning; background art restored (gfx.sprite.removeAll() was deleting the background sprite, so it's now re-registered on every scene build); score moved to top center; popups clamped on screen; American spelling throughout; title subtitle centered; screenshot tooling.
 
-## Current Considerations
-
-### Implementation Priorities
-1. Sound effects and feedback
-2. Visual polish (particles, animations)
-3. Additional gameplay features
-4. Menu system enhancements
-5. High score persistence
-
-### Technical Challenges
-1. Fine-tuning bounce physics
-2. Balancing difficulty progression
-3. Optimizing sprite management
-4. Smooth state transitions
-5. Performance optimization
-
-## Next Steps
-
-### Immediate Tasks
-1. Add sound effects for:
-   - Victim bouncing
-   - Successful rescue
-   - Game over
-2. Add visual feedback:
-   - Bounce effects
-   - Rescue celebration
-   - Score indicators
-3. Enhance menu system:
-   - Better transitions
-   - Visual polish
-   - Instructions screen
-
-### Upcoming Work
-1. Additional gameplay features
-2. Performance optimization
-3. Asset refinement
-4. Testing and balancing
-5. Polish and feedback
-
-## Open Questions
-1. Additional gameplay mechanics
-2. Scoring system refinements
-3. Visual effect improvements
-4. Sound design approach
-
-## Risk Assessment
-
-### Technical Risks
-1. Physics edge cases
-2. Performance with multiple victims
-3. Memory management
-4. State transition bugs
-
-### Mitigation Strategies
-1. Comprehensive testing
-2. Performance monitoring
-3. Clean state management
-4. Robust error handling
+## Next steps
+1. Source MP3s live in `docs/`; regenerate the game WAVs with `python3 scripts/prep_sounds.py docs`.
+2. Playtest on the simulator and device: crank sensitivity (2 px per degree), the 3-victim threshold, and whether the menu hint text fits beside the crank indicator.
+3. Final title, bundle ID and launcher images.

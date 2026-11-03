@@ -1,0 +1,7 @@
+name=Crank & Catch
+author=Todd Greco
+description=Catch jumpers with a crank-powered net and bounce them to the ambulance.
+bundleID=com.mrballistic.crankandcatch
+version=0.3.0
+buildNumber=3
+imagePath=images/launcher

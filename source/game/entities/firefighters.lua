@@ -6,105 +6,83 @@ local gfx <const> = playdate.graphics
 
 class('Firefighters').extends(gfx.sprite)
 
--- Constants for movement
-local SCREEN_WIDTH <const> = 400
-local MIN_X <const> = 80  -- Left boundary (after building width)
-local MAX_X <const> = 350 -- Right boundary (near ambulance)
-local Y_POSITION <const> = 220 -- Vertical position of firefighters (near bottom of building)
+-- Image is 20px tall; the net's top surface is at local y = 10, which is the
+-- sprite's center, so moveTo(x, NET_Y) puts the net surface exactly on NET_Y.
+local IMAGE_HEIGHT <const> = 20
 
-function Firefighters:init(notifyObserversFn)
-    -- Store the notifyObservers function
-    self.notifyObservers = notifyObserversFn
-    -- Create a temporary placeholder image for the firefighters
-    local firefighterWidth = 40
-    local firefighterHeight = 20
-    local image = gfx.image.new(firefighterWidth, firefighterHeight)
-    
-    -- Draw the placeholder sprite
+local function makePlaceholder()
+    local w = Config.NET_WIDTH
+    local image = gfx.image.new(w, IMAGE_HEIGHT)
     gfx.pushContext(image)
-        -- Set color to white for all elements
         gfx.setColor(gfx.kColorWhite)
-        
-        -- Draw the net (trampoline)
-        gfx.fillRect(0, firefighterHeight/2, firefighterWidth, firefighterHeight/2)
-        -- Draw the firefighters (two figures)
-        gfx.fillRect(5, 0, 10, firefighterHeight/2)  -- Left firefighter
-        gfx.fillRect(firefighterWidth-15, 0, 10, firefighterHeight/2)  -- Right firefighter
+        -- Two firefighters holding the net at each end
+        gfx.fillRect(0, 2, 5, 16)
+        gfx.fillRect(w - 5, 2, 5, 16)
+        -- Net
+        gfx.fillRect(0, 10, w, 4)
+        -- Aim marks: center notch and quarter ticks, so hit position is readable
+        gfx.setColor(gfx.kColorBlack)
+        gfx.fillRect(w / 2 - 1, 10, 2, 4)
+        gfx.fillRect(w / 4, 12, 1, 2)
+        gfx.fillRect(3 * w / 4, 12, 1, 2)
     gfx.popContext()
-    
-    -- Initialize the sprite with the image
-    self:setImage(image)
-    
-    -- Set initial position
-    self:moveTo(SCREEN_WIDTH/2, Y_POSITION)
-    
-    -- Add to display list
+    return image
+end
+
+function Firefighters:init()
+    Firefighters.super.init(self)
+    -- Walk cycle: frames advance per pixel moved (not per second), so their
+    -- steps match the crank. Frame 1 is the standing pose.
+    self.anim = Assets.anim("firefighters", Config.FIREFIGHTER_STRIDE, makePlaceholder)
+    self.anim:apply(self)
+    self.moved = false
+    self.dipTime = 0
+    self:setZIndex(Config.Z_NET)
+    self:moveTo((Config.NET_MIN_X + Config.NET_MAX_X) / 2, Config.NET_Y)
     self:add()
 end
 
--- Movement configuration
-local CRANK_SENSITIVITY <const> = 2.0
-local MOVEMENT_SPEED <const> = 200 -- pixels per second
-
-function Firefighters:update(dt)
-    -- Base update for sprite
-    Firefighters.super.update(self)
+-- Crank is the primary control; the D-pad is a fallback (handy in the simulator).
+function Firefighters:updatePosition(dt)
+    local dx = playdate.getCrankChange() * Config.CRANK_SENSITIVITY
+    if playdate.buttonIsPressed(playdate.kButtonLeft) then
+        dx = dx - Config.DPAD_SPEED * dt
+    end
+    if playdate.buttonIsPressed(playdate.kButtonRight) then
+        dx = dx + Config.DPAD_SPEED * dt
+    end
+    self:moveBy(dx)
 end
 
--- Handle crank-based position updates
-function Firefighters:updatePosition()
-    -- Get crank change for movement
-    local change = playdate.getCrankChange()
-    
-    -- Update position based on crank movement
-    if change ~= 0 then
-        local newX = self.x + (change * CRANK_SENSITIVITY)
-        -- Clamp position within boundaries
-        newX = math.max(MIN_X, math.min(MAX_X, newX))
-        self:moveTo(newX, self.y)
+-- Menu demo: walk toward targetX at a human-ish speed.
+function Firefighters:steer(targetX, dt)
+    local maxStep = Config.DEMO_NET_SPEED * dt
+    self:moveBy(math.max(-maxStep, math.min(maxStep, targetX - self.x)))
+end
+
+function Firefighters:moveBy(dx)
+    self.moved = false
+    if dx ~= 0 then
+        local x = math.max(Config.NET_MIN_X, math.min(Config.NET_MAX_X, self.x + dx))
+        if x ~= self.x then
+            self.anim:advance(math.abs(x - self.x))
+            self.moved = true
+        end
+        self:moveTo(x, self.y)
     end
 end
 
--- Get the current position of the firefighters
-function Firefighters:getPosition()
-    return self.x, self.y
+-- Visual only: the net sags briefly on a catch. Physics always uses NET_Y.
+function Firefighters:dip()
+    self.dipTime = Config.NET_DIP_DURATION
+    self:moveTo(self.x, Config.NET_Y + Config.NET_DIP)
 end
 
--- Check if a point is within the catching range
-function Firefighters:canCatch(x, y)
-    -- Simple rectangle collision check
-    local width = self:getSize()
-    local catchWidth = width * 0.8 -- Slightly smaller than visual width for better gameplay
-    local catchHeight = 20 -- Vertical catching range
-    
-    -- Check if point is within catch area
-    local inRange = math.abs(x - self.x) < catchWidth/2 and 
-                   math.abs(y - self.y) < catchHeight/2
-    
-    if inRange then
-        -- Calculate hit position relative to center (-1 to 1)
-        local hitPosition = (x - self.x) / (catchWidth/2)
-        
-        -- Notify observers of potential catch
-        self.notifyObservers("catchAttempt", {
-            x = self.x,
-            y = self.y,
-            width = catchWidth,
-            height = catchHeight,
-            hitPosition = hitPosition
-        })
-        
-        -- Return catch info including hit position
-        return {
-            hitPosition = hitPosition
-        }
+function Firefighters:tick(dt)
+    if not self.moved then self.anim:reset() end -- stand still when not moving
+    self.anim:apply(self)
+    if self.dipTime > 0 then
+        self.dipTime = self.dipTime - dt
+        if self.dipTime <= 0 then self:moveTo(self.x, Config.NET_Y) end
     end
-    
-    return false
-end
-
--- Handle successful catch
-function Firefighters:onCatch()
-    -- Could add animation or visual feedback here
-    self.notifyObservers("victimCaught")
 end
