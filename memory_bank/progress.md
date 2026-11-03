@@ -1,113 +1,20 @@
-# Progress Tracking: Fire Game & Watch Remake
+# Progress
 
-## Project Status: Initial Setup Phase
+## Done
+- Core loop: spawn → catch → aimed bounce → rescue or miss; lives; game over.
+- Difficulty ramp, Express bonus, persistent high score.
+- Sound (synth, with WAV overrides), popups, shake, net sag, ambulance flash.
+- Pause (Ⓑ and the system menu), crank indicator, D-pad fallback.
+- Asset drop-in system and art/sound brief.
+- Build script; unit, playability and headless smoke tests.
 
-### Completed Items
-- ✅ Project documentation initialized
-- ✅ Technical specifications defined
-- ✅ Architecture patterns established
-- ✅ Development environment requirements documented
-- ✅ Development environment setup
-- ✅ Project structure creation
-- ✅ Basic game initialization
-- ✅ Core entity classes created
-- ✅ Game compiles and runs in simulator
-- ✅ Crank input system working
+## Not yet verified on screen
+The game builds with pdc and passes the headless smoke test, but has not yet been looked at in the simulator after the rebuild. Check text layout, the crank indicator, sound levels and the feel of the crank.
 
-### In Progress
-- 🔄 Sound system implementation
-- 🔄 Visual feedback enhancements
-- 🔄 Menu system polish
+## To do
+- Optional sounds: rescue, express, game over (synth fallbacks play for now).
+- Balance pass from real play.
+- Title and bundle ID; then `imagePath` in pdxinfo.
 
-### Completed
-- ✅ Game loop implementation
-- ✅ Physics system setup
-- ✅ Victim spawning system
-- ✅ Input handling system
-- ✅ Rendering system
-- ✅ Entity management system
-- ✅ Firefighter movement
-- ✅ Collision detection
-- ✅ Scoring system
-- ✅ Lives system
-- ✅ Game states
-- ✅ Visual layout optimization
-- ✅ Color scheme implementation
-- ✅ Version control setup
-- ✅ Edge-based bounce physics
-- ✅ Progressive difficulty
-- ✅ Sprite cleanup system
-- ✅ State transitions
-- ✅ Immediate victim respawning
-
-### Pending Work
-
-#### Core Systems
-- ⏳ Sound system
-- ⏳ Particle effects
-- ⏳ Visual feedback
-
-#### Assets
-- ⏳ Enhanced sprites
-- ⏳ Animation frames
-- ⏳ Sound effects
-- ⏳ Visual effects
-
-#### Polish
-- ⏳ Menu transitions
-- ⏳ Instructions screen
-- ⏳ High score persistence
-- ⏳ Performance optimization
-- ⏳ Additional effects
-
-## Known Issues
-- None currently reported
-
-## Testing Status
-- ✅ Basic gameplay validation
-- ✅ Physics behavior testing
-- ✅ State transitions
-- ⏳ Performance testing
-- ⏳ Edge case testing
-
-## Optimization Needs
-- ⏳ Multiple victim performance
-- ⏳ State transition smoothing
-- ⏳ Memory management
-- ⏳ Sprite batching
-
-## Next Milestone Goals
-1. Add sound effects system
-2. Implement visual feedback
-3. Enhance menu system
-4. Add particle effects
-5. Polish state transitions
-
-## Overall Progress
-- Documentation: 100%
-- Development Setup: 100%
-- Core Systems: 95%
-- Gameplay Features: 90%
-- Assets: 50% (basic sprites complete)
-- Polish: 30%
-- Testing: 40%
-
-## Notes
-- Core gameplay refined:
-  - Edge-based bounce physics
-  - Progressive difficulty
-  - Immediate victim respawning
-  - Clean sprite management
-- Visual system improved:
-  - Consistent white-on-black theme
-  - Clear UI rendering
-  - Proper sprite cleanup
-- Game flow enhanced:
-  - Clean state transitions
-  - Better sprite management
-  - Proper game reset handling
-- Next focus areas:
-  1. Sound and visual feedback
-  2. Menu system enhancements
-  3. Additional polish features
-  4. Performance optimization
+## Known issues
+- None found in tests. Possible difficulty spike at 2,000 points (3 victims).

@@ -6,10 +6,6 @@ source/**/Fire.pdx/
 Builds/
 Support/
 
-# Playdate SDK files
-**/*.pdxinfo
-source/pdxinfo
-
 # Lua compiled files
 *.lua~
 *.luac

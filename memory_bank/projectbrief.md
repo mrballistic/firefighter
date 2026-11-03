@@ -1,51 +1,20 @@
-# Project Brief: Fire Game & Watch Remake for Playdate
+# Project Brief
 
-## Overview
-A modern remake of Nintendo's classic Game & Watch "Fire" game, specifically adapted for the Playdate handheld gaming system. The game leverages Playdate's unique crank control mechanism to deliver a fresh take on the classic gameplay.
+## What it is
+An original crank-controlled rescue game for Playdate called **Crank & Catch**. People jump from a burning building; the player slides a net under them and bounces them across the screen into an ambulance.
 
-## Core Requirements
+It shares the catch-and-bounce idea common to the genre, but it is its own game: physics-driven, with aiming by hit position, and with its own art, title and presentation. It is not a recreation of any specific existing game. Keep it that way: no borrowed names, characters, layouts or LCD-style look.
 
-### Essential Features
-- Faithful recreation of original Fire gameplay mechanics
-- Crank-controlled firefighter movement
-- Victim rescue system with physics
-- Scoring and lives system
-- High score tracking
+## Core requirements
+- Crank moves the net (D-pad fallback).
+- **Where a victim lands on the net sets the bounce angle.** That is the central skill.
+- Scoring, lives, difficulty ramp, persistent high score.
+- 1-bit visuals and sound feedback.
 
-### Target Platform
-- Playdate handheld console
-- 400x240 1-bit display
-- Primary control via crank mechanism
-- Secondary controls: D-pad, A/B buttons (optional)
+## Platform
+Playdate: 400×240 1-bit display, crank, Lua 5.4 via the Playdate SDK (developed on 3.1.2).
 
-## Project Goals
-1. Create an engaging, modernized version of the classic game
-2. Utilize Playdate's unique hardware capabilities effectively
-3. Maintain smooth, responsive gameplay
-4. Implement precise physics for jumping and bouncing
-5. Deliver polished visuals within 1-bit display constraints
-
-## Scope
-
-### In Scope
-- Core gameplay mechanics
-- Basic physics system
-- Score tracking
-- Sound effects
-- Menu system
-- Local high score storage
-
-### Out of Scope (Future Considerations)
-- Online leaderboards
-- Achievement system
-- Speed run mode
-- Alternative control schemes
-- Additional game modes
-
-## Success Criteria
-1. Smooth, responsive crank controls
-2. Consistent frame rate performance
-3. Accurate collision detection
-4. Engaging difficulty progression
-5. Intuitive user interface
-6. Polished visual and audio feedback
+## Success criteria
+- Steady 30 fps; responsive crank.
+- Every jumper is catchable, and every throw can reach the ambulance (enforced by tests).
+- Aiming matters: each step of aim toward the right edge saves bounces (tuned with `scripts/tune.lua`).

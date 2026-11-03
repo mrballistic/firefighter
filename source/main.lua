@@ -2,299 +2,375 @@ import "CoreLibs/object"
 import "CoreLibs/graphics"
 import "CoreLibs/sprites"
 import "CoreLibs/timer"
-import "CoreLibs/crank"
-import "game/entities/firefighters"
+import "CoreLibs/ui"
+import "game/config"
+import "game/physics"
+import "game/rules"
+import "game/assets"
+import "game/sound"
+import "game/effects"
 import "game/entities/building"
+import "game/entities/smoke"
+import "game/entities/firefighters"
 import "game/entities/ambulance"
 import "game/entities/victim"
 
--- Shortcuts for common functions
 local gfx <const> = playdate.graphics
-local display <const> = playdate.display
 
--- Game states enum
-local GameState = {
+local State <const> = {
     MENU = "menu",
     PLAYING = "playing",
     PAUSED = "paused",
-    GAME_OVER = "gameOver"
+    GAME_OVER = "gameOver",
 }
 
--- Game configuration
-local Config = {
-    FPS = 30,
-    PHYSICS_STEP = 1/30,
-    VICTIM_SPAWN_INTERVAL = 3,
-    SCORE_PER_RESCUE = 100,  -- Score per successful rescue
-    VICTIMS_INCREASE_THRESHOLD = 500,  -- Score needed to allow 2 victims
-    INITIAL_HORIZONTAL_VELOCITY = 100  -- Initial push from building
-}
-
--- Get maximum allowed victims based on score
-local function getMaxVictims(score)
-    if score < Config.VICTIMS_INCREASE_THRESHOLD then
-        return 1  -- Start with one victim
-    else
-        return 2  -- Allow two victims after threshold
-    end
-end
-
--- Game state
-local gameState = {
-    currentState = GameState.MENU,
+local game = {
+    state = State.MENU,
     score = 0,
-    lives = 3,
+    lives = Config.START_LIVES,
     highScore = 0,
-    timeSinceLastSpawn = 0,
-    activeVictims = {},
-    entities = {
-        firefighters = nil,
-        building = nil,
-        ambulance = nil
-    },
-    observers = {}
+    newHighScore = false,
+    demo = true,       -- menu attract mode: the scene plays itself, nothing scores
+    menuTime = 0,      -- drives the menu's blink and hint rotation
+    spawnTimer = 0,
+    victims = {},
+    building = nil,
+    smoke = nil,  -- nil when there's no smoke art
+    net = nil,
+    ambulance = nil,
 }
 
--- Observer pattern implementation
-local function addObserver(event, callback)
-    if not gameState.observers[event] then
-        gameState.observers[event] = {}
-    end
-    table.insert(gameState.observers[event], callback)
+-- High score persistence ----------------------------------------------------
+
+local function loadHighScore()
+    local data = playdate.datastore.read()
+    game.highScore = (data and data.highScore) or 0
 end
 
-local function notifyObservers(event, data)
-    if gameState.observers[event] then
-        for _, callback in ipairs(gameState.observers[event]) do
-            callback(data)
-        end
-    end
+local function saveHighScore()
+    playdate.datastore.write({ highScore = game.highScore })
 end
 
--- Physics system
-local physics = {
-    gravity = 200,  -- pixels per second squared
-    lastUpdate = playdate.getCurrentTimeMilliseconds()
-}
+-- Game flow -----------------------------------------------------------------
 
-local function updatePhysics(dt)
-    -- Update physics for active victims
-    for i = #gameState.activeVictims, 1, -1 do
-        local victim = gameState.activeVictims[i]
-        
-        if victim:isActive() then
-            -- Apply gravity
-            local vx, vy = victim:getVelocity()
-            victim:setVelocity(vx, vy + physics.gravity * dt)
-            
-            -- Update victim's internal position
-            if victim.update then
-                victim:update()
-            end
-            
-            -- Get updated position
-            local victimX, victimY = victim:getPosition()
-            local victimBounds = victim:getBounds()
-            
-            -- Check for collision with firefighters
-            local catchInfo = gameState.entities.firefighters:canCatch(victimX, victimY)
-            if catchInfo then
-                -- Get current velocities
-                local vx, vy = victim:getVelocity()
-                
-                -- Calculate bounce velocities based on hit position
-                local MIN_BOUNCE_VELOCITY <const> = 200  -- Minimum velocity to reach ambulance
-                local HORIZONTAL_BOOST <const> = 30      -- Base horizontal boost
-                local EDGE_BOOST <const> = 40           -- Additional boost when hitting edges
-                
-                -- Calculate hit position relative to center (-1 to 1, where 0 is center)
-                local hitPosition = catchInfo.hitPosition
-                
-                -- More horizontal velocity when hitting edges
-                local edgeBoost = math.abs(hitPosition) * EDGE_BOOST
-                local newVx = math.max(vx * 0.5, 0) + HORIZONTAL_BOOST + edgeBoost
-                
-                -- Ensure minimum upward velocity while preserving some momentum
-                local newVy = -math.max(math.abs(vy), MIN_BOUNCE_VELOCITY)
-                
-                -- Apply new velocities
-                victim:setVelocity(newVx, newVy)
-                victim:bounce()
-            end
-            
-            -- Check for rescue by ambulance
-            if gameState.entities.ambulance:isInRescueZone(victimX, victimY) then
-                victim:rescue()
-                gameState.entities.ambulance:onRescue()
-                table.remove(gameState.activeVictims, i)
-            end
-            
-            -- Remove inactive victims from the array
-            if not victim:isActive() then
-                table.remove(gameState.activeVictims, i)
-            end
-        end
-    end
-end
-
--- Initialize game
-local function initGame()
-    -- Clear all sprites
+-- The same scene serves the menu (as an attract-mode demo) and the game.
+local function buildScene()
     gfx.sprite.removeAll()
-    
-    -- Clear the display
-    gfx.clear()
-    
-    -- Reset game state
-    gameState.currentState = GameState.PLAYING
-    gameState.score = 0
-    gameState.lives = 3
-    gameState.timeSinceLastSpawn = 0
-    gameState.activeVictims = {}
-    
-    -- Set background color
-    gfx.setBackgroundColor(gfx.kColorBlack)
-    
-    -- Create game entities
-    gameState.entities.building = Building()
-    gameState.entities.firefighters = Firefighters(notifyObservers)
-    gameState.entities.ambulance = Ambulance(notifyObservers)
-    
-    -- Set up observers
-    addObserver("victimRescued", function(data)
-        gameState.score = gameState.score + Config.SCORE_PER_RESCUE
-        if gameState.score > gameState.highScore then
-            gameState.highScore = gameState.score
-            notifyObservers("newHighScore", gameState.highScore)
-        end
-    end)
-    
-    addObserver("victimLost", function()
-        gameState.lives = gameState.lives - 1
-        if gameState.lives <= 0 then
-            gameState.currentState = GameState.GAME_OVER
-            notifyObservers("gameOver", gameState.score)
-        end
-        -- Force immediate spawn of new victim after death
-        gameState.timeSinceLastSpawn = Config.VICTIM_SPAWN_INTERVAL * 2
-    end)
+    Effects.reset()
+    game.spawnTimer = 0
+    game.victims = {}
+    game.building = Building()
+    game.smoke = Smoke.create()
+    game.net = Firefighters()
+    game.ambulance = Ambulance()
 end
 
--- Input handling
-local function handleInput()
-    -- Handle menu navigation
-    if gameState.currentState == GameState.MENU then
-        if playdate.buttonJustPressed(playdate.kButtonA) then
-            initGame()
-        end
+local function enterMenu()
+    buildScene()
+    game.state = State.MENU
+    game.demo = true
+    game.menuTime = 0
+end
+
+local function startGame()
+    buildScene()
+    game.state = State.PLAYING
+    game.demo = false
+    game.score = 0
+    game.lives = Config.START_LIVES
+    game.newHighScore = false
+    playdate.getCrankChange() -- discard crank movement made on the menu
+end
+
+local function endGame()
+    game.state = State.GAME_OVER
+    Sound.gameOver()
+    if game.newHighScore then saveHighScore() end
+end
+
+local function spawnVictim()
+    local x, y = game.building:getRandomSpawnPoint(game.demo and Config.DEMO_FIRST_WINDOW or 1)
+    local vx = math.random(Config.JUMP_VX_MIN, Config.JUMP_VX_MAX)
+    local v = Victim(x, y, vx, Config.JUMP_VY)
+    if game.demo then
+        v.demoAim = Config.DEMO_AIM_MIN + math.random() * (Config.DEMO_AIM_MAX - Config.DEMO_AIM_MIN)
     end
-    
-    -- Handle pause toggle
-    if playdate.buttonJustPressed(playdate.kButtonB) then
-        if gameState.currentState == GameState.PLAYING then
-            gameState.currentState = GameState.PAUSED
-        elseif gameState.currentState == GameState.PAUSED then
-            gameState.currentState = GameState.PLAYING
-        end
+    table.insert(game.victims, v)
+    game.spawnTimer = 0
+end
+
+local function onRescued(victim)
+    if game.demo then
+        victim:remove()
+        game.ambulance:flash()
+        game.spawnTimer = 0 -- give the demo net time to walk back
+        return
     end
-    
-    -- Handle game over state
-    if gameState.currentState == GameState.GAME_OVER then
-        if playdate.buttonJustPressed(playdate.kButtonA) then
-            -- Clear all sprites when returning to menu
-            gfx.sprite.removeAll()
-            gameState.currentState = GameState.MENU
-        end
+    local points, express = Rules.rescueScore(victim.body.bounces)
+    victim:remove()
+    game.ambulance:flash()
+    Sound.rescue(express)
+    Effects.popup((express and "EXPRESS +" or "+") .. points, Config.AMBULANCE_X - 10, Config.AMBULANCE_TOP - 20)
+    game.score = game.score + points
+    if game.score > game.highScore then
+        game.highScore = game.score
+        game.newHighScore = true
     end
-    
-    -- Handle in-game input
-    if gameState.currentState == GameState.PLAYING then
-        -- Crank input is handled by Firefighters entity
-        gameState.entities.firefighters:updatePosition()
+    game.spawnTimer = 0
+end
+
+local function onLost(victim)
+    if game.demo then
+        victim:remove()
+        game.spawnTimer = 0
+        return
+    end
+    local x = victim.body.x
+    victim:remove()
+    game.lives = game.lives - 1
+    game.spawnTimer = 0
+    Effects.shake()
+    Effects.popup("MISS", x, Config.SCREEN_HEIGHT - 30)
+    Sound.splat()
+    if game.lives <= 0 then
+        endGame()
     end
 end
 
--- Main update function
+local function updateVictims(dt)
+    local netX = game.net.x
+    -- Iterate backwards so removing index i doesn't skip anyone.
+    for i = #game.victims, 1, -1 do
+        local v = game.victims[i]
+        local b = v.body
+        local prevY = b.y
+
+        Physics.step(b, dt)
+        Physics.collideWalls(b)
+        if Physics.isCatch(prevY, b, netX) then
+            local h = Physics.bounce(b, netX)
+            if not game.demo then Sound.bounce(h) end
+            game.net:dip()
+        end
+
+        if Physics.isRescued(b) then
+            onRescued(v)
+            table.remove(game.victims, i)
+        elseif Physics.isLost(b) then
+            onLost(v)
+            table.remove(game.victims, i)
+        else
+            v:tick(dt)
+            v:sync()
+        end
+    end
+end
+
+-- Menu demo player: head for wherever the next jumper will come down (rising
+-- or falling), offset so they land at that jumper's aim. Between jumpers,
+-- wait near the building where they first land.
+local function updateDemoNet(dt)
+    local target, soonest
+    for _, v in ipairs(game.victims) do
+        local t = Physics.timeToLand(v.body)
+        if t and (not soonest or t < soonest) then target, soonest = v, t end
+    end
+    if target then
+        local landX = Physics.landingX(target.body)
+        game.net:steer(landX - target.demoAim * Config.NET_HALF_WIDTH, dt)
+    else
+        game.net:steer(Config.DEMO_NET_HOME, dt)
+    end
+end
+
+local function updateSpawning(dt)
+    if game.demo then
+        game.spawnTimer = game.spawnTimer + dt
+        if #game.victims == 0 and game.spawnTimer >= Config.DEMO_RESPAWN_DELAY then
+            spawnVictim()
+        end
+        return
+    end
+    if game.state ~= State.PLAYING then return end
+    game.spawnTimer = game.spawnTimer + dt
+    local n = #game.victims
+    if n < Rules.maxVictims(game.score) then
+        local wait = (n == 0) and Config.RESPAWN_DELAY or Rules.spawnInterval(game.score)
+        if game.spawnTimer >= wait then
+            spawnVictim()
+        end
+    end
+end
+
+-- Input ---------------------------------------------------------------------
+
+local function handleInput(dt)
+    local a = playdate.buttonJustPressed(playdate.kButtonA)
+    local b = playdate.buttonJustPressed(playdate.kButtonB)
+
+    if game.state == State.MENU then
+        if a then startGame() end
+    elseif game.state == State.PLAYING then
+        if b then
+            game.state = State.PAUSED
+        else
+            game.net:updatePosition(dt)
+        end
+    elseif game.state == State.PAUSED then
+        if a or b then game.state = State.PLAYING end
+        playdate.getCrankChange() -- discard crank movement made while paused
+    elseif game.state == State.GAME_OVER then
+        if a then enterMenu() end
+    end
+end
+
+-- Drawing -------------------------------------------------------------------
+
+local titleImage = nil -- loaded at setup; nil falls back to text
+
+-- Text on a black backing box, so it stays readable over the skyline, smoke
+-- and moving sprites. align: "center" (x is the centre), "left" or "right".
+local function label(text, x, y, align)
+    local w, h = gfx.getTextSize(text)
+    if align == "center" then
+        x = x - w / 2
+    elseif align == "right" then
+        x = x - w
+    end
+    gfx.setColor(gfx.kColorBlack)
+    gfx.fillRoundRect(x - 4, y - 2, w + 8, h + 4, 3)
+    gfx.setImageDrawMode(gfx.kDrawModeFillWhite)
+    gfx.drawText(text, x, y)
+    gfx.setImageDrawMode(gfx.kDrawModeCopy)
+end
+
+local function centered(text, y)
+    label(text, Config.SCREEN_WIDTH / 2, y, "center")
+end
+
+local MENU_HINTS <const> = {
+    "Crank or ✛ moves the net",
+    "Catch right of centre to throw farther",
+    "Two bounces or fewer: Express bonus",
+}
+
+-- Two lines under the title, kept above the top of the demo's bounce arcs:
+-- a blinking prompt, then one line rotating through the high score (once
+-- there is one) and the hints.
+local function drawMenu()
+    if titleImage then
+        local w = titleImage:getSize()
+        titleImage:draw((Config.SCREEN_WIDTH - w) / 2, 6)
+    else
+        centered(Config.TITLE, 24)
+    end
+
+    if (game.menuTime % Config.BLINK_PERIOD) < Config.BLINK_PERIOD * 0.7 then
+        centered("Press Ⓐ to Start", 66)
+    end
+
+    local lines = {}
+    if game.highScore > 0 then lines[1] = "High Score: " .. game.highScore end
+    for _, hint in ipairs(MENU_HINTS) do lines[#lines + 1] = hint end
+    local i = math.floor(game.menuTime / Config.HINT_DURATION) % #lines + 1
+    centered(lines[i], 86)
+
+    if playdate.isCrankDocked() then
+        playdate.ui.crankIndicator:draw()
+    end
+end
+
+local function drawUI()
+    if game.state == State.MENU then
+        drawMenu()
+        return
+    end
+
+    label("Score: " .. game.score, 5, 5, "left")
+    label("Lives: " .. game.lives, Config.SCREEN_WIDTH - 5, 5, "right")
+    gfx.setImageDrawMode(gfx.kDrawModeFillWhite)
+    Effects.draw()
+    gfx.setImageDrawMode(gfx.kDrawModeCopy)
+
+    if game.state == State.PAUSED then
+        centered("PAUSED", 90)
+        centered("Press Ⓑ to Resume", 115)
+    elseif game.state == State.GAME_OVER then
+        centered("GAME OVER", 70)
+        centered("Final Score: " .. game.score, 95)
+        if game.newHighScore then centered("NEW HIGH SCORE!", 120) end
+        centered("Press Ⓐ for Menu", 145)
+    end
+end
+
+-- Main loop -----------------------------------------------------------------
+
 function playdate.update()
-    -- Clear the screen and set to black background
-    gfx.clear()
-    gfx.setBackgroundColor(gfx.kColorBlack)
-    gfx.setColor(gfx.kColorWhite) -- Set to white for sprites and text
-    
-    -- Calculate delta time
-    local currentTime = playdate.getCurrentTimeMilliseconds()
-    local dt = (currentTime - physics.lastUpdate) / 1000.0
-    physics.lastUpdate = currentTime
-    
-    -- Handle input
-    handleInput()
-    
-    -- Update game logic based on state
-    if gameState.currentState == GameState.PLAYING then
-        -- Update physics
-        updatePhysics(dt)
-        
-        -- Update game entities
-        for _, entity in pairs(gameState.entities) do
-            if entity.update then
-                entity:update(dt)
-            end
-        end
-        
-        -- Update victim spawning
-        gameState.timeSinceLastSpawn = gameState.timeSinceLastSpawn + dt
-        local maxVictims = getMaxVictims(gameState.score)
-        
-        -- Only spawn if we're below max victims and enough time has passed
-        if gameState.timeSinceLastSpawn >= Config.VICTIM_SPAWN_INTERVAL and
-           #gameState.activeVictims < maxVictims and
-           gameState.lives > 0 then  -- Only spawn if we have lives left
-            
-            -- Spawn new victim when none are active (after rescue or death)
-            if #gameState.activeVictims == 0 then
-                -- Reset spawn timer and create new victim
-                gameState.timeSinceLastSpawn = 0
-                local spawnX, spawnY = gameState.entities.building:getRandomSpawnPoint()
-                local newVictim = Victim(spawnX, spawnY, Config.INITIAL_HORIZONTAL_VELOCITY, 0, notifyObservers)
-                table.insert(gameState.activeVictims, newVictim)
-            -- For second victim (if allowed by score)
-            elseif maxVictims > 1 and #gameState.activeVictims == 1 then
-                -- Spawn additional victim
-                local spawnX, spawnY = gameState.entities.building:getRandomSpawnPoint()
-                local newVictim = Victim(spawnX, spawnY, Config.INITIAL_HORIZONTAL_VELOCITY, 0, notifyObservers)
-                table.insert(gameState.activeVictims, newVictim)
-                gameState.timeSinceLastSpawn = 0
-            end
-        end
+    local dt = Physics.clampDt(playdate.getElapsedTime())
+    playdate.resetElapsedTime()
+
+    handleInput(dt)
+
+    if game.state == State.PLAYING then
+        -- Difficulty speeds up the simulation, not the player's controls.
+        local simDt = dt * Rules.timeScale(game.score)
+        updateVictims(simDt)
+        updateSpawning(simDt)
+    elseif game.state == State.MENU then
+        game.menuTime = game.menuTime + dt
+        updateDemoNet(dt)
+        updateVictims(dt)
+        updateSpawning(dt)
     end
-    
-    -- Update sprites (this draws all game entities)
+    if game.state == State.PLAYING or game.state == State.MENU then
+        game.net:tick(dt)
+        game.ambulance:tick(dt)
+    end
+    if game.state ~= State.PAUSED then
+        Effects.update(dt)
+        -- Ambient animation keeps going on the menu and game over screens too.
+        game.building:tick(dt)
+        if game.smoke then game.smoke:tick(dt) end
+    end
+
+    -- Always-redraw: the sprite system clears (to the background colour or
+    -- background art) and redraws the whole frame, so immediate-mode UI text
+    -- never leaves stale pixels.
     gfx.sprite.update()
-    
-    -- Update timers
+    drawUI()
     playdate.timer.updateTimers()
-    
-    -- Draw UI overlay
-    gfx.setImageDrawMode(gfx.kDrawModeFillWhite)  -- Ensure text is white
-    
-    if gameState.currentState == GameState.MENU then
-        gfx.drawText("FIRE", 180, 100)
-        gfx.drawText("Press Ⓐ to Start", 150, 120)
-        gfx.drawText("High Score: " .. gameState.highScore, 150, 140)
-    elseif gameState.currentState == GameState.PLAYING then
-        gfx.drawText("Score: " .. gameState.score, 5, 5)
-        gfx.drawText("Lives: " .. gameState.lives, 300, 5)
-    elseif gameState.currentState == GameState.PAUSED then
-        gfx.drawText("PAUSED", 170, 110)
-        gfx.drawText("Press Ⓑ to Resume", 140, 130)
-    elseif gameState.currentState == GameState.GAME_OVER then
-        gfx.drawText("GAME OVER", 160, 100)
-        gfx.drawText("Final Score: " .. gameState.score, 150, 120)
-        gfx.drawText("Press Ⓐ for Menu", 145, 140)
-    end
-    
-    gfx.setImageDrawMode(gfx.kDrawModeCopy)  -- Reset draw mode
 end
 
--- Set up menu state when the game first loads
-gameState.currentState = GameState.MENU
+-- System events: pause when the Playdate menu opens; save before sleep/quit.
+function playdate.gameWillPause()
+    if game.state == State.PLAYING then game.state = State.PAUSED end
+end
+
+function playdate.gameWillTerminate()
+    saveHighScore()
+end
+
+function playdate.deviceWillSleep()
+    saveHighScore()
+end
+
+-- One-time setup ------------------------------------------------------------
+
+playdate.display.setRefreshRate(30)
+gfx.setBackgroundColor(gfx.kColorBlack)
+gfx.sprite.setAlwaysRedraw(true)
+
+local background = Assets.image("background")
+if background then
+    gfx.sprite.setBackgroundDrawingCallback(function()
+        background:draw(0, 0)
+    end)
+end
+
+titleImage = Assets.image("title")
+
+math.randomseed(playdate.getSecondsSinceEpoch())
+loadHighScore()
+Sound.init()
+enterMenu()
+playdate.resetElapsedTime()
