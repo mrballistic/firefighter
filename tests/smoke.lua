@@ -361,7 +361,7 @@ press("A")
 check(shown("Score: ") == 0 and shown("Lives: ") == Config.START_LIVES, "second game resets")
 for _ = 1, 30 * 60 do play() end
 local s2 = shown("Score: ")
-check(s2 and s2 % 50 == 0, "second game scores in normal increments (" .. tostring(s2) .. ")")
+check(s2 and s2 % 10 == 0 and s2 > 0, "second game scores in normal increments (" .. tostring(s2) .. ")")
 
 -- Reload with a saved high score (simulates relaunching the game).
 imported = {}

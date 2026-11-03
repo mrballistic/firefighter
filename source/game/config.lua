@@ -50,9 +50,10 @@ Config = {
 
     -- Rules
     START_LIVES = 3,
-    EXTRA_LIFE_EVERY = 10000, -- a life for every this many points...
+    EXTRA_LIFE_EVERY = 5000,  -- a life for every this many points...
     MAX_LIVES = 5,            -- ...up to this many at once
     SCORE_PER_RESCUE = 100,
+    SCORE_PER_SPEEDUP = 10,   -- each speed-up adds this to a rescue (100 -> 160 at full speed)
     EXPRESS_MAX_BOUNCES = 2,  -- rescue in this many bounces or fewer...
     EXPRESS_BONUS = 50,       -- ...earns this on top
     RESPAWN_DELAY = 0.75,     -- seconds after the screen empties

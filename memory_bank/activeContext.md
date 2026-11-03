@@ -19,6 +19,8 @@ Original art and sound are in (named **Crank & Catch**). Next is a simulator pla
 
 - 0.4: net starts at 72 px and narrows 4 px per 500 points to a 44 px floor (composed per width from the art's end figures); extra life every 10,000 points (max 5); speed-up capped at 1.3×; fixed a hardware-only bug where the net stored its width in the sprite's read-only `width` (rendered 0 px wide); smoke stubs now reject such writes.
 
+- 0.5: extra life every 5,000 points (was 10,000); rescues worth 10 more per speed-up in effect (100 → 160 at full speed, Express +50 on top).
+
 ## Next steps
 1. Source MP3s live in `docs/`; regenerate the game WAVs with `python3 scripts/prep_sounds.py docs`.
 2. Playtest on the simulator and device: crank sensitivity (2 px per degree), the 3-victim threshold, and whether the menu hint text fits beside the crank indicator.
