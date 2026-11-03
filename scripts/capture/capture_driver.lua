@@ -24,7 +24,7 @@ math.randomseed(20261103)
 playdate.getElapsedTime = function() return DT end
 playdate.resetElapsedTime = function() end
 playdate.isCrankDocked = function() return false end
-for _, name in ipairs({ "bounce", "rescue", "splat", "gameOver" }) do
+for _, name in ipairs({ "bounce", "rescue", "splat", "gameOver", "extraLife" }) do
     Sound[name] = function() end
 end
 Effects.shake = function() end
@@ -114,7 +114,7 @@ local function steer()
         if t and (not soonest or t < soonest) then target, soonest = v, t end
     end
     if not target then return end
-    local want = Physics.landingX(target.body) - AIM * Config.NET_HALF_WIDTH
+    local want = Physics.landingX(target.body) - AIM * n.half
     local step = NET_SPEED * DT
     local dx = math.max(-step, math.min(step, want - n.x))
     input.crank = dx / Config.CRANK_SENSITIVITY

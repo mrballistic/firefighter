@@ -39,9 +39,21 @@ function Physics.catchLine()
     return Config.NET_Y - Config.VICTIM_RADIUS
 end
 
--- -1 = left edge of the net, 0 = center, +1 = right edge.
-function Physics.hitPosition(x, netX)
-    local h = (x - netX) / Config.NET_HALF_WIDTH
+-- Net functions take the net's current half width (it narrows with score);
+-- nil means the reference width, Config.NET_HALF_WIDTH.
+local function halfOr(half) return half or Config.NET_HALF_WIDTH end
+
+-- Where the net's center may go for a given half width: its ends never
+-- overlap the building or the ambulance.
+function Physics.netRange(half)
+    half = halfOr(half)
+    return Config.BUILDING_RIGHT + half, Config.AMBULANCE_LEFT - half
+end
+
+-- -1 = left edge of the net, 0 = center, +1 = right edge. Relative to the
+-- net's width, so aiming means the same thing at any width.
+function Physics.hitPosition(x, netX, half)
+    local h = (x - netX) / halfOr(half)
     if h > 1 then return 1 end
     if h < -1 then return -1 end
     return h
@@ -61,16 +73,16 @@ end
 -- True if the body crossed the net surface this step while falling and is
 -- over the net. Testing the crossing (not "inside a box") means a catch fires
 -- exactly once and can't be skipped by a large step.
-function Physics.isCatch(prevY, b, netX)
+function Physics.isCatch(prevY, b, netX, half)
     local line = Physics.catchLine()
     return b.vy > 0
         and prevY <= line and b.y >= line
-        and math.abs(b.x - netX) <= Config.NET_HALF_WIDTH
+        and math.abs(b.x - netX) <= halfOr(half)
 end
 
 -- Apply a catch: snap to the net and launch. Returns the hit position.
-function Physics.bounce(b, netX)
-    local h = Physics.hitPosition(b.x, netX)
+function Physics.bounce(b, netX, half)
+    local h = Physics.hitPosition(b.x, netX, half)
     b.y = Physics.catchLine()
     b.vx, b.vy = Physics.bounceVelocity(h)
     b.bounces = (b.bounces or 0) + 1

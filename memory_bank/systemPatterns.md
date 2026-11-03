@@ -5,6 +5,7 @@
 - `main.lua` owns everything that changes: the state machine (menu / playing / paused / game over), the victim list, scoring, lives and spawning. No observer or event bus: rescue and loss call `onRescued` / `onLost` directly. (An earlier observer setup re-registered on every game, which doubled scoring in game 2.)
 - **Pure-Lua core:** `config.lua`, `physics.lua` and `rules.lua` touch no `playdate.*` APIs, so tests run on stock Lua. Keep any new game logic in this layer when possible.
 - **Sprites don't move themselves.** `gfx.sprite.update()` calls every sprite's `update()` with no arguments, so movement or timers in `update()` run twice per frame or crash on a nil `dt`. Entities expose `tick(dt)` (animation, timers) and `sync()` (copy the physics body to the sprite position), called from `main.lua`.
+- **Never store game data in `self.width` / `self.height` on a sprite.** Playdate sprites own those (their image's size) and silently ignore writes, so the net once rendered 0 px wide on hardware. The net uses `netWidth`/`half`. The smoke test's fake sprites now raise on such writes.
 - Victim state lives in a plain `body` table `{x, y, vx, vy, bounces}`, separate from the sprite.
 
 ## Physics

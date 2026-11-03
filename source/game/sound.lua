@@ -61,6 +61,10 @@ function Sound.rescue(express)
 end
 
 -- A victim hit the ground.
+function Sound.extraLife()
+    sequence(chimeSynth, { 784, 988, 1175, 1568, 1175, 1568 }, 0.06, 70)
+end
+
 function Sound.splat()
     if samples.splat then return samples.splat:play() end
     sequence(missSynth, { 220, 147 }, 0.15, 130)

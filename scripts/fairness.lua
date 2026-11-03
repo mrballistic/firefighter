@@ -32,6 +32,8 @@ local MINUTES = 200
 local function run(speed, score)
     math.randomseed(42)
     local scale = Rules.timeScale(score)
+    local half = Rules.netWidth(score) / 2
+    local netMin, netMax = Physics.netRange(half)
     local simDt = DT * scale
     local caught, lost, unavoidable, spawned = 0, 0, 0, 0
     local victims, net, timer = {}, 200, 0
@@ -43,7 +45,7 @@ local function run(speed, score)
         if n < Rules.maxVictims(score) then
             local wait = (n == 0) and Config.RESPAWN_DELAY or Rules.spawnInterval(score)
             if timer >= wait then
-                local b = Rules.chooseLaunch(Config.spawnPoints(), victims, scale)
+                local b = Rules.chooseLaunch(Config.spawnPoints(), victims, scale, nil, half)
                 if b then victims[#victims + 1] = b; timer = 0; spawned = spawned + 1 end
             end
         end
@@ -55,9 +57,9 @@ local function run(speed, score)
             if t and (not soonest or t < soonest) then target, soonest = b, t end
         end
         if target then
-            local want = Physics.landingX(target) - AIM * Config.NET_HALF_WIDTH
+            local want = Physics.landingX(target) - AIM * half
             local step = speed * DT
-            net = math.max(Config.NET_MIN_X, math.min(Config.NET_MAX_X,
+            net = math.max(netMin, math.min(netMax,
                 net + math.max(-step, math.min(step, want - net))))
         end
 
@@ -70,7 +72,7 @@ local function run(speed, score)
             if py <= line and b.y >= line and b.vy > 0 then
                 landings[#landings + 1] = { f = f, x = b.x, body = b }
             end
-            if Physics.isCatch(py, b, net) then Physics.bounce(b, net); caught = caught + 1 end
+            if Physics.isCatch(py, b, net, half) then Physics.bounce(b, net, half); caught = caught + 1 end
             if Physics.isRescued(b) then
                 table.remove(victims, i); timer = 0
             elseif Physics.isLost(b) then
@@ -82,7 +84,7 @@ local function run(speed, score)
                 if mine then
                     for _, o in ipairs(landings) do
                         if o.body ~= b and math.abs(o.f - mine.f) <= 60 then
-                            local dx = math.abs(o.x - mine.x) - Config.NET_HALF_WIDTH
+                            local dx = math.abs(o.x - mine.x) - half
                             local realGap = math.abs(o.f - mine.f) * DT
                             if dx > 0 and realGap < dx / speed then unavoidable = unavoidable + 1; break end
                         end
@@ -95,8 +97,8 @@ local function run(speed, score)
         while #landings > 0 and landings[1].f < f - 90 do table.remove(landings, 1) end
     end
 
-    print(string.format("score %4d (%d jumpers, %.2fx) net %3d px/s: %5.1f jumpers/min, %5.1f misses/min, unavoidable %4.1f%% of misses",
-        score, Rules.maxVictims(score), scale, speed,
+    print(string.format("score %4d (%d jumpers, %.2fx, net %2d px) crank %3d px/s: %5.1f jumpers/min, %5.1f misses/min, unavoidable %4.1f%% of misses",
+        score, Rules.maxVictims(score), scale, half * 2, speed,
         spawned / MINUTES, lost / MINUTES, lost > 0 and 100 * unavoidable / lost or 0))
 end
 

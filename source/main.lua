@@ -74,7 +74,7 @@ local function buildScene()
     game.victims = {}
     game.building = Building()
     game.smoke = Smoke.create()
-    game.net = Firefighters()
+    game.net = Firefighters(Rules.netWidth(0))
     game.ambulance = Ambulance()
 end
 
@@ -108,7 +108,7 @@ local function spawnVictim()
     local others = {}
     for i, v in ipairs(game.victims) do others[i] = v.body end
     local scale = game.demo and 1 or Rules.timeScale(game.score)
-    local launch = Rules.chooseLaunch(points, others, scale)
+    local launch = Rules.chooseLaunch(points, others, scale, nil, game.net.half)
     if not launch then return false end
     local v = Victim(launch.x, launch.y, launch.vx, launch.vy)
     if game.demo then
@@ -131,7 +131,13 @@ local function onRescued(victim)
     game.ambulance:flash()
     Sound.rescue(express)
     Effects.popup((express and "EXPRESS +" or "+") .. points, Config.AMBULANCE_X - 10, Config.AMBULANCE_TOP - 20)
+    local before = game.score
     game.score = game.score + points
+    if Rules.extraLivesEarned(before, game.score) > 0 and game.lives < Config.MAX_LIVES then
+        game.lives = math.min(Config.MAX_LIVES, game.lives + Rules.extraLivesEarned(before, game.score))
+        Effects.popup("EXTRA LIFE!", Config.SCREEN_WIDTH / 2, 40)
+        Sound.extraLife()
+    end
     if game.score > game.highScore then
         game.highScore = game.score
         game.newHighScore = true
@@ -167,8 +173,8 @@ local function updateVictims(dt)
 
         Physics.step(b, dt)
         Physics.collideWalls(b)
-        if Physics.isCatch(prevY, b, netX) then
-            local h = Physics.bounce(b, netX)
+        if Physics.isCatch(prevY, b, netX, game.net.half) then
+            local h = Physics.bounce(b, netX, game.net.half)
             if not game.demo then Sound.bounce(h) end
             game.net:dip()
         end
@@ -197,10 +203,19 @@ local function updateDemoNet(dt)
     end
     if target then
         local landX = Physics.landingX(target.body)
-        game.net:steer(landX - target.demoAim * Config.NET_HALF_WIDTH, dt)
+        game.net:steer(landX - target.demoAim * game.net.half, dt)
     else
         game.net:steer(Config.DEMO_NET_HOME, dt)
     end
+end
+
+-- The net narrows as the score climbs (Rules.netWidth); announce each step.
+local function updateNetWidth()
+    local target = Rules.netWidth(game.score)
+    if target < game.net.targetWidth then
+        Effects.popup("NET NARROWS", game.net.x, Config.NET_Y - 40)
+    end
+    game.net:setTargetWidth(target)
 end
 
 local function updateSpawning(dt)
@@ -335,6 +350,7 @@ function playdate.update()
     if game.state == State.PLAYING then
         -- Difficulty speeds up the simulation, not the player's controls.
         local simDt = dt * Rules.timeScale(game.score)
+        updateNetWidth()
         updateVictims(simDt)
         updateSpawning(simDt)
     elseif game.state == State.MENU then

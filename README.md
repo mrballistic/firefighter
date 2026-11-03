@@ -7,8 +7,8 @@ A crank-controlled rescue game for [Playdate](https://play.date). People are jum
 - 🎣 **Turn the crank** to slide the firefighters and their net (the D-pad works too).
 - 🎯 **Where they land on the net sets the throw.** Center sends them nearly straight up and a little forward: safe, and it buys time. The right side throws them toward the ambulance. The left side throws them back toward the building.
 - 🚑 **Get them into the ambulance** for 100 points. Make it in **2 bounces or fewer** for an Express bonus (+50).
-- ❌ Three misses and it's over.
-- 📈 **It ramps up:** a second jumper at 500 points, a third at 2,000, and every 500 points the action runs 5% faster (capped at +40%) with less time between jumpers.
+- ❌ Three misses and it's over. Every 10,000 points earns an extra life (up to 5).
+- 📈 **It ramps up:** the net starts wide (72 px) and narrows 4 px every 500 points, down to 44 px at 3,500. A second jumper joins at 500 points and a third at 2,000, and every 500 points the action runs 5% faster (capped at +30%) with less time between jumpers.
 - ⚖️ **It's fair:** an extra jumper only leaps when a player cranking at a comfortable pace could reach both their first landing and everyone else's next one. Clashes after that come from where you aimed.
 
 | Control | Action |
