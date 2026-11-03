@@ -46,7 +46,12 @@ function Effects.draw()
         -- Blink out over the last quarter of its life.
         if progress < 0.75 or math.floor(p.t * 20) % 2 == 0 then
             local y = p.y - progress * Config.POPUP_RISE
-            gfx.drawTextAligned(p.text, p.x, y, kTextAlignment.center)
+            -- Keep the whole text on screen (popups near the ambulance would
+            -- otherwise run off the right edge).
+            local w = gfx.getTextSize(p.text)
+            local half = w / 2 + 4
+            local x = math.max(half, math.min(Config.SCREEN_WIDTH - half, p.x))
+            gfx.drawTextAligned(p.text, x, y, kTextAlignment.center)
         end
     end
 end

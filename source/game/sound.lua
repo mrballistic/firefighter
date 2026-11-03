@@ -1,6 +1,6 @@
 import "CoreLibs/timer"
 
--- Sound effects. Synthesised by default (no audio files needed); any of
+-- Sound effects. Synthesized by default (no audio files needed); any of
 -- source/sounds/{bounce,rescue,express,splat,gameover}.wav that exists is used
 -- instead. Playdate wants 16-bit PCM or IMA-ADPCM .wav (see docs/art-brief.md).
 

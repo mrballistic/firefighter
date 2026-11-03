@@ -4,7 +4,7 @@ Usage (needs Pillow; uv fetches it on the fly):
     uv run --with pillow python scripts/check_art.py
 
 Reports, per PNG: its size, and pixel counts of pure black, pure white,
-fully transparent, and anything else (greys, colours, partial alpha). Anything
+fully transparent, and anything else (grays, colors, partial alpha). Anything
 in the last two columns will be thresholded unpredictably by pdc.
 Also checks each *-table-W-H.png divides evenly into W x H frames.
 """

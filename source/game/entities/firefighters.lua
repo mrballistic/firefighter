@@ -7,7 +7,7 @@ local gfx <const> = playdate.graphics
 class('Firefighters').extends(gfx.sprite)
 
 -- Image is 20px tall; the net's top surface is at local y = 10, which is the
--- sprite's centre, so moveTo(x, NET_Y) puts the net surface exactly on NET_Y.
+-- sprite's center, so moveTo(x, NET_Y) puts the net surface exactly on NET_Y.
 local IMAGE_HEIGHT <const> = 20
 
 local function makePlaceholder()
@@ -20,7 +20,7 @@ local function makePlaceholder()
         gfx.fillRect(w - 5, 2, 5, 16)
         -- Net
         gfx.fillRect(0, 10, w, 4)
-        -- Aim marks: centre notch and quarter ticks, so hit position is readable
+        -- Aim marks: center notch and quarter ticks, so hit position is readable
         gfx.setColor(gfx.kColorBlack)
         gfx.fillRect(w / 2 - 1, 10, 2, 4)
         gfx.fillRect(w / 4, 12, 1, 2)

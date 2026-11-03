@@ -9,14 +9,14 @@
 
 ## Physics
 - Semi-implicit Euler; gravity 400 px/s²; frame time clamped to 1/15 s.
-- Catches are detected by the victim's centre **crossing** the catch line (`NET_Y − radius`) while falling, over the net. This fires once per catch and can't be skipped by a long frame.
+- Catches are detected by the victim's center **crossing** the catch line (`NET_Y − radius`) while falling, over the net. This fires once per catch and can't be skipped by a long frame.
 - Bounce: fixed speed (280), angle = 5° + h × 15°. Chosen with `scripts/tune.lua` for higher arcs (more reaction time) while keeping each step of aim worth fewer bounces.
 - `Physics.timeToLand` / `landingX` predict where a body next crosses the catch line; the demo player (and the smoke test's scripted player) steer to that point.
 - Walls: the building face reflects; the right screen edge stops the victim dead over the ambulance (no ricochet loop).
-- Rescue: centre x ≥ ambulance left edge and bottom ≥ ambulance top. Lost: fully below the screen.
+- Rescue: center x ≥ ambulance left edge and bottom ≥ ambulance top. Lost: fully below the screen.
 
 ## Rendering
-- `gfx.sprite.setAlwaysRedraw(true)` plus a black background colour (or `images/background` via the background callback). The whole frame redraws, so immediate-mode UI text never leaves stale pixels. Don't call `gfx.clear()`.
+- `gfx.sprite.setAlwaysRedraw(true)` plus a black background color (or `images/background` via the background callback). The whole frame redraws, so immediate-mode UI text never leaves stale pixels. Don't call `gfx.clear()`.
 - UI text is drawn after `gfx.sprite.update()` with `kDrawModeFillWhite`.
 
 ## Assets

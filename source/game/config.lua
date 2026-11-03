@@ -10,12 +10,12 @@ Config = {
     SCREEN_HEIGHT = 240,
 
     -- Building (left side). Its bottom sits on the bottom of the screen.
-    BUILDING_X = 30,          -- centre x
+    BUILDING_X = 30,          -- center x
     BUILDING_WIDTH = 40,
     BUILDING_HEIGHT = 200,
     WINDOW_COUNT = 5,
     WINDOW_SIZE = 20,
-    WINDOW_TOP_OFFSET = 15,   -- first window centre, below the roof
+    WINDOW_TOP_OFFSET = 15,   -- first window center, below the roof
     WINDOW_SPACING = 30,
 
     -- Net (firefighters). NET_Y is the top surface of the net.
@@ -25,8 +25,8 @@ Config = {
     DPAD_SPEED = 220,         -- pixels per second (fallback control)
 
     -- Ambulance (right side)
-    AMBULANCE_X = 370,        -- centre x
-    AMBULANCE_Y = 220,        -- centre y
+    AMBULANCE_X = 370,        -- center x
+    AMBULANCE_Y = 220,        -- center y
     AMBULANCE_WIDTH = 40,
     AMBULANCE_HEIGHT = 30,
     FLASH_DURATION = 0.2,
@@ -40,7 +40,7 @@ Config = {
     -- Physics
     GRAVITY = 400,            -- px/s^2
     BOUNCE_SPEED = 280,       -- every bounce leaves the net at this speed
-    BOUNCE_BIAS_DEG = 5,      -- centre hit: nearly vertical, slight forward lean
+    BOUNCE_BIAS_DEG = 5,      -- center hit: nearly vertical, slight forward lean
     BOUNCE_SPREAD_DEG = 15,   -- edge hit adds/removes this much angle
     MAX_DT = 1 / 15,          -- clamp frame time so a hitch can't teleport bodies
 
@@ -59,6 +59,13 @@ Config = {
     SPAWN_INTERVAL_MIN = 1.5, -- ...down to this
     TIME_SCALE_STEP = 0.05,   -- game speed +5% per step...
     TIME_SCALE_MAX = 1.4,     -- ...capped here
+
+    -- Fair spawning: an extra jumper only leaps if a player cranking at
+    -- FAIR_NET_SPEED could get from every other jumper's next landing to this
+    -- one's first landing (with REACTION to spare). Tuned with scripts/fairness.lua.
+    FAIR_NET_SPEED = 300,     -- px/s of real time: comfortable, not frantic, cranking
+    FAIR_REACTION = 0.2,      -- seconds of slack on top of travel time
+    FAIR_LAUNCH_TRIES = 12,   -- window/speed combinations tried per frame before waiting
 
     -- Effects
     POPUP_DURATION = 0.8,

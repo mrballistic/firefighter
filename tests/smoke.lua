@@ -102,6 +102,11 @@ local gfx = setmetatable({
     },
     imagetable = { new = function(path) return WITH_ART and imagetable(path) or nil end },
     sprite = setmetatable({
+        -- Like the SDK: the callback is drawn by a sprite, which removeAll() deletes.
+        setBackgroundDrawingCallback = function(fn)
+            local bg = setmetatable({ isBackground = true, draw = fn }, Sprite)
+            live[bg] = true
+        end,
         update = function()
             for s in pairs(live) do s:update() end
         end,
@@ -187,7 +192,7 @@ local function findNet()
 end
 
 -- Scripted player: steer the net under whichever victim lands next, landing
--- it right of centre (aim 0.6). Uses the crank, like a real player.
+-- it right of center (aim 0.6). Uses the crank, like a real player.
 local function play()
     local net = findNet()
     local target, soonest
@@ -211,12 +216,18 @@ local function findSprite(cls)
     for s in pairs(live) do if getmetatable(s) == cls then return s end end
 end
 
+local function hasBackground()
+    for s in pairs(live) do if s.isBackground then return true end end
+    return false
+end
+
 -- The run ---------------------------------------------------------------------------
 import("main")
 print(WITH_ART and "smoke (with art: 4-frame sheets)" or "smoke (no art: placeholders)")
 
 frame()
 if WITH_ART then
+    check(hasBackground(), "background art on the menu at launch")
     check(not screenHas(Config.TITLE), "title art replaces the title text")
 else
     check(screenHas(Config.TITLE), "menu shows title text without title art")
@@ -253,6 +264,7 @@ press("A")
 check(shown("Score: ") == 0 and shown("Lives: ") == Config.START_LIVES, "game starts at 0 / full lives")
 
 if WITH_ART then
+    check(hasBackground(), "background art survives starting a game")
     local building, net, smoke = findSprite(Building), findSprite(Firefighters), findSprite(Smoke)
     check(smoke ~= nil, "smoke sprite created when its art exists")
     check(smoke and smoke.y + 12 == Config.BUILDING_TOP, "smoke sits on the roof")

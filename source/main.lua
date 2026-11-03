@@ -53,9 +53,22 @@ end
 
 -- Game flow -----------------------------------------------------------------
 
+-- Background art is drawn by a sprite the SDK creates for the callback, and
+-- gfx.sprite.removeAll() deletes it, so it's re-registered on every scene build.
+local backgroundImage = nil
+
+local function setupBackground()
+    if backgroundImage then
+        gfx.sprite.setBackgroundDrawingCallback(function()
+            backgroundImage:draw(0, 0)
+        end)
+    end
+end
+
 -- The same scene serves the menu (as an attract-mode demo) and the game.
 local function buildScene()
     gfx.sprite.removeAll()
+    setupBackground()
     Effects.reset()
     game.spawnTimer = 0
     game.victims = {}
@@ -88,15 +101,22 @@ local function endGame()
     if game.newHighScore then saveHighScore() end
 end
 
+-- Returns false (and spawns nothing) when no fair jump exists right now;
+-- the caller just tries again next frame.
 local function spawnVictim()
-    local x, y = game.building:getRandomSpawnPoint(game.demo and Config.DEMO_FIRST_WINDOW or 1)
-    local vx = math.random(Config.JUMP_VX_MIN, Config.JUMP_VX_MAX)
-    local v = Victim(x, y, vx, Config.JUMP_VY)
+    local points = game.building:getSpawnPoints(game.demo and Config.DEMO_FIRST_WINDOW or 1)
+    local others = {}
+    for i, v in ipairs(game.victims) do others[i] = v.body end
+    local scale = game.demo and 1 or Rules.timeScale(game.score)
+    local launch = Rules.chooseLaunch(points, others, scale)
+    if not launch then return false end
+    local v = Victim(launch.x, launch.y, launch.vx, launch.vy)
     if game.demo then
         v.demoAim = Config.DEMO_AIM_MIN + math.random() * (Config.DEMO_AIM_MAX - Config.DEMO_AIM_MIN)
     end
     table.insert(game.victims, v)
     game.spawnTimer = 0
+    return true
 end
 
 local function onRescued(victim)
@@ -229,7 +249,7 @@ end
 local titleImage = nil -- loaded at setup; nil falls back to text
 
 -- Text on a black backing box, so it stays readable over the skyline, smoke
--- and moving sprites. align: "center" (x is the centre), "left" or "right".
+-- and moving sprites. align: "center" (x is the center), "left" or "right".
 local function label(text, x, y, align)
     local w, h = gfx.getTextSize(text)
     if align == "center" then
@@ -250,7 +270,7 @@ end
 
 local MENU_HINTS <const> = {
     "Crank or ✛ moves the net",
-    "Catch right of centre to throw farther",
+    "Catch right of center to throw farther",
     "Two bounces or fewer: Express bonus",
 }
 
@@ -286,7 +306,8 @@ local function drawUI()
         return
     end
 
-    label("Score: " .. game.score, 5, 5, "left")
+    -- Score sits top center, clear of the smoke drifting off the roof (top left).
+    label("Score: " .. game.score, Config.SCREEN_WIDTH / 2, 5, "center")
     label("Lives: " .. game.lives, Config.SCREEN_WIDTH - 5, 5, "right")
     gfx.setImageDrawMode(gfx.kDrawModeFillWhite)
     Effects.draw()
@@ -333,7 +354,7 @@ function playdate.update()
         if game.smoke then game.smoke:tick(dt) end
     end
 
-    -- Always-redraw: the sprite system clears (to the background colour or
+    -- Always-redraw: the sprite system clears (to the background color or
     -- background art) and redraws the whole frame, so immediate-mode UI text
     -- never leaves stale pixels.
     gfx.sprite.update()
@@ -360,12 +381,7 @@ playdate.display.setRefreshRate(30)
 gfx.setBackgroundColor(gfx.kColorBlack)
 gfx.sprite.setAlwaysRedraw(true)
 
-local background = Assets.image("background")
-if background then
-    gfx.sprite.setBackgroundDrawingCallback(function()
-        background:draw(0, 0)
-    end)
-end
+backgroundImage = Assets.image("background")
 
 titleImage = Assets.image("title")
 

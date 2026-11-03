@@ -8,7 +8,7 @@ whole file into Claude Design (or hand it to anyone making assets).
 A Playdate game. A building on the left is on fire; people jump from its
 windows. The player turns the crank to slide two firefighters holding a net
 along the bottom of the screen. Each catch bounces the jumper back up, and
-**where they land on the net sets the throw**: centre goes nearly straight up,
+**where they land on the net sets the throw**: center goes nearly straight up,
 the right side throws them toward an ambulance on the right, the left side
 throws them back toward the building. Get them into the ambulance to score.
 
@@ -25,7 +25,7 @@ throws them back toward the building. Get them into the ambulance to score.
 ## Hard technical rules
 
 - **1-bit only:** every pixel is pure black, pure white, or transparent. No
-  greys or anti-aliasing; the device has no grey and will threshold them
+  grays or anti-aliasing; the device has no gray and will threshold them
   unpredictably. Pattern dithering (checkerboard and similar) is fine and is
   how 1-bit art does shading.
 - **The background is black, so sprites read as white-on-black.** Use black
@@ -42,8 +42,8 @@ throws them back toward the building. Get them into the ambulance to score.
 
 | File | Size (px) | What it is | Must-haves |
 |---|---|---|---|
-| `building.png` | 40 × 200 | The burning building; its bottom sits on the screen's bottom edge | Five windows on the **right-hand face**, centred at y = 15, 45, 75, 105, 135 (from the top of the image), each about 20×20. Jumpers appear at the right edge at those heights. Flames and smoke welcome. |
-| `firefighters.png` | 48 × 20 | Two firefighters holding a net between them | The **net's top surface must be exactly at row 10** (rows 10–13 = net). Firefighters stand at the far left and far right ends (about 5 px each). **Keep aim marks on the net**: a centre notch plus quarter ticks. Players aim with them. |
+| `building.png` | 40 × 200 | The burning building; its bottom sits on the screen's bottom edge | Five windows on the **right-hand face**, centered at y = 15, 45, 75, 105, 135 (from the top of the image), each about 20×20. Jumpers appear at the right edge at those heights. Flames and smoke welcome. |
+| `firefighters.png` | 48 × 20 | Two firefighters holding a net between them | The **net's top surface must be exactly at row 10** (rows 10–13 = net). Firefighters stand at the far left and far right ends (about 5 px each). **Keep aim marks on the net**: a center notch plus quarter ticks. Players aim with them. |
 | `victim.png` | 15 × 15 | A jumper, mid-air | Reads as a person at 15 px. Arms up or flailing. |
 | `victim-table-15-15.png` *(optional, replaces `victim.png`)* | 15 × 15 per frame | Same jumper, flailing | Frames side by side (4 frames = 60 × 15). Loops at 0.12 s/frame; each jumper starts at a random frame. |
 | `building-table-40-200.png` *(optional, replaces `building.png`)* | 40 × 200 per frame | Flames flickering in the windows | Same window positions in every frame. Loops at 0.18 s/frame. |
@@ -52,7 +52,7 @@ throws them back toward the building. Get them into the ambulance to score.
 | `ambulance.png` | 40 × 30 | The ambulance on the right; its bottom sits about 5 px above the screen's bottom | Victims drop in from above and the left, so an open back or roof hatch facing left/up sells it. Cab on the right. |
 | `ambulance-flash.png` *(optional)* | 40 × 30 | Shown for 0.2 s on each rescue | If missing, the game uses an inverted `ambulance.png`. |
 | `title.png` *(generated)* | about 239 × 53 | Menu title | Cropped from the launcher card by `scripts/make_title.py`, so the menu and card share one lettering. Don't draw it separately; re-run the script after changing the card. |
-| `background.png` *(optional)* | 400 × 240 | Full-screen backdrop behind everything | **Mostly black** (sprites are white). Keep the **top 20 px** clear (score/lives text) and the **middle band** around y = 80–160 calm (menu text). A ground line near y = 236, a skyline, stars or drifting smoke all work. |
+| `background.png` *(optional)* | 400 × 240 | Full-screen backdrop behind everything | **Mostly black** (sprites are white). Keep the **top 20 px** clear (score at top center, lives at top right; the roof smoke owns the top left) and the **middle band** around y = 80–160 calm (menu text). A ground line near y = 236, a skyline, stars or drifting smoke all work. |
 
 ### Layout reference (screen coordinates, 400 × 240)
 

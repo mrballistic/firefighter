@@ -34,12 +34,12 @@ function Physics.collideWalls(b)
     end
 end
 
--- The height the victim's centre is at when its feet touch the net.
+-- The height the victim's center is at when its feet touch the net.
 function Physics.catchLine()
     return Config.NET_Y - Config.VICTIM_RADIUS
 end
 
--- -1 = left edge of the net, 0 = centre, +1 = right edge.
+-- -1 = left edge of the net, 0 = center, +1 = right edge.
 function Physics.hitPosition(x, netX)
     local h = (x - netX) / Config.NET_HALF_WIDTH
     if h > 1 then return 1 end

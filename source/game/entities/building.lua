@@ -39,8 +39,10 @@ function Building:tick(dt)
     self.anim:apply(self)
 end
 
--- minWindow (optional) skips the upper windows; 1 = top window.
-function Building:getRandomSpawnPoint(minWindow)
-    local p = self.spawnPoints[math.random(minWindow or 1, #self.spawnPoints)]
-    return p.x, p.y
+-- Spawn points from window `minWindow` down (1 = top window, the default).
+function Building:getSpawnPoints(minWindow)
+    if not minWindow or minWindow <= 1 then return self.spawnPoints end
+    local out = {}
+    for i = minWindow, #self.spawnPoints do out[#out + 1] = self.spawnPoints[i] end
+    return out
 end

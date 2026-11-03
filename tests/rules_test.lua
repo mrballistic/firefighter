@@ -32,3 +32,40 @@ test("express bonus for rescues in 2 bounces or fewer", function()
     check(normal == Config.SCORE_PER_RESCUE and not e1, "3 bounces is normal")
     check(express == Config.SCORE_PER_RESCUE + Config.EXPRESS_BONUS and e2, "2 bounces is express")
 end)
+
+test("landings on the same spot are always compatible", function()
+    check(Rules.landingsCompatible({ t = 1, x = 150 }, { t = 1, x = 160 }), "10 px apart, same instant")
+end)
+
+test("far-apart landings need enough time to crank across", function()
+    local a = { t = 1.0, x = 100 }
+    local farSoon = { t = 1.2, x = 300 }  -- 176 px of travel in 0.2 s: no
+    local farLater = { t = 2.0, x = 300 } -- same distance in 1 s: yes
+    check(not Rules.landingsCompatible(a, farSoon), "too soon")
+    check(Rules.landingsCompatible(a, farLater), "enough time")
+end)
+
+test("faster game speed leaves less real time, so a borderline gap becomes unfair", function()
+    local a, b = { t = 1.0, x = 100 }, { t = 1.0 + (176 / Config.FAIR_NET_SPEED + Config.FAIR_REACTION) * 1.05, x = 300 }
+    check(Rules.landingsCompatible(a, b, 1.0), "fair at normal speed")
+    check(not Rules.landingsCompatible(a, b, 1.4), "unfair at 1.4x")
+end)
+
+test("a launch clashing with a jumper already in the air is refused", function()
+    local p = Config.spawnPoints()[3]
+    local candidate = { x = p.x, y = p.y, vx = 65, vy = Config.JUMP_VY }
+    local t = Physics.timeToLand(candidate)
+    -- another jumper landing at the far end of the net at the same moment
+    local other = { x = Config.NET_MAX_X, y = Physics.catchLine() - 0.5 * Config.GRAVITY * t * t, vx = 0, vy = 0 }
+    check(not Rules.fairToLaunch(candidate, { other }), "should refuse")
+    check(Rules.fairToLaunch(candidate, {}), "fine when alone")
+end)
+
+test("chooseLaunch returns nil rather than an unfair jump, and a fair one when it can", function()
+    local saved = Rules.fairToLaunch
+    Rules.fairToLaunch = function() return false end
+    check(Rules.chooseLaunch(Config.spawnPoints(), {}, 1) == nil, "nothing fair: wait")
+    Rules.fairToLaunch = saved
+    local b = Rules.chooseLaunch(Config.spawnPoints(), {}, 1)
+    check(b and b.vx >= Config.JUMP_VX_MIN and b.vx <= Config.JUMP_VX_MAX and b.vy == Config.JUMP_VY, "valid body")
+end)

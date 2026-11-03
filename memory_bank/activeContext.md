@@ -15,6 +15,8 @@ Original art and sound are in (named **Crank & Catch**). Next is a simulator pla
 - Menu redone: title art from the card, attract-mode demo, backed text. Bounce raised to 280 px/s at 5° ± 15°.
 - Found and fixed: the demo spawned the next jumper the instant the last one was rescued (its outcome handlers skipped the spawn-timer reset).
 
+- 0.3: fair spawning; background art restored (gfx.sprite.removeAll() was deleting the background sprite, so it's now re-registered on every scene build); score moved to top center; popups clamped on screen; American spelling throughout; title subtitle centered; screenshot tooling.
+
 ## Next steps
 1. Source MP3s live in `docs/`; regenerate the game WAVs with `python3 scripts/prep_sounds.py docs`.
 2. Playtest on the simulator and device: crank sensitivity (2 px per degree), the 3-victim threshold, and whether the menu hint text fits beside the crank indicator.
