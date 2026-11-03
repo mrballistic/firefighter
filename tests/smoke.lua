@@ -34,6 +34,16 @@ function class(name)
             -- base class; subclasses get the instance methods.
             parent = rawget(parent, "__instance") or parent
             c.super = parent
+            -- Like the SDK, sprites own width/height (their image's size);
+            -- game code storing its own values there would silently fail on
+            -- a real Playdate, so fail loudly here.
+            c.__newindex = function(t, k, v)
+                if (k == "width" or k == "height") and rawget(c, "__isSprite") then
+                    error("sprite." .. k .. " is read-only on Playdate (use another field name)", 2)
+                end
+                rawset(t, k, v)
+            end
+            if rawget(parent, "__isSprite") then c.__isSprite = true end
             setmetatable(c, {
                 __index = parent,
                 __call = function(cls, ...)
@@ -51,6 +61,7 @@ end
 local live = {}
 local Sprite = {}
 Sprite.__index = Sprite
+Sprite.__isSprite = true -- subclasses inherit the marker (see class())
 function Sprite:init() self.x, self.y = 0, 0 end
 function Sprite:moveTo(x, y)
     assert(type(x) == "number" and type(y) == "number", "moveTo needs numbers")
@@ -201,7 +212,7 @@ local function play()
         if t and (not soonest or t < soonest) then target, soonest = s, t end
     end
     if net and target then
-        local want = Physics.landingX(target.body) - 0.6 * Config.NET_HALF_WIDTH
+        local want = Physics.landingX(target.body) - 0.6 * net.half
         input.crank = (want - net.x) / Config.CRANK_SENSITIVITY
     end
     frame()
@@ -262,6 +273,7 @@ check(not screenHas("^Score: "), "no score HUD on the menu")
 
 press("A")
 check(shown("Score: ") == 0 and shown("Lives: ") == Config.START_LIVES, "game starts at 0 / full lives")
+check(findSprite(Firefighters).netWidth == Config.NET_WIDTH_START, "net starts at its widest")
 
 if WITH_ART then
     check(hasBackground(), "background art survives starting a game")
@@ -297,6 +309,11 @@ end
 -- Play well for 2 minutes of game time.
 for _ = 1, 30 * 120 do play() end
 local scoreAfterPlay = shown("Score: ")
+local netNow = findSprite(Firefighters)
+check(netNow.netWidth == Rules.netWidth(scoreAfterPlay) or netNow.netWidth > Rules.netWidth(scoreAfterPlay),
+    "net width follows the score")
+check(netNow.netWidth < Config.NET_WIDTH_START, "net has narrowed by " .. tostring(scoreAfterPlay) .. " points")
+check(netNow.half == netNow.netWidth / 2, "catch area matches the drawn net")
 print(string.format("  scripted player: score %s, lives %s after 2 min",
     tostring(scoreAfterPlay), tostring(shown("Lives: "))))
 check(scoreAfterPlay and scoreAfterPlay >= 1000, "a good player scores (got " .. tostring(scoreAfterPlay) .. ")")

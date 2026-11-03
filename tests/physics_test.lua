@@ -4,15 +4,18 @@ local test, check = T.test, T.check
 
 local DT = 1 / 30
 local HALF = Config.NET_HALF_WIDTH
+local WIDEST, NARROWEST = Config.NET_WIDTH_START / 2, Config.NET_WIDTH_MIN / 2
 
-local function clampNet(x)
-    return math.max(Config.NET_MIN_X, math.min(Config.NET_MAX_X, x))
+local function clampNet(x, half)
+    local lo, hi = Physics.netRange(half or HALF)
+    return math.max(lo, math.min(hi, x))
 end
 
 -- Simulate one victim from a spawn point with a perfect player who always
 -- puts the net so the victim lands at hit position `aim`.
 -- Returns outcome ("rescued" | "lost" | "timeout"), bounce count, trace.
-local function simulate(spawn, jumpVx, aim)
+local function simulate(spawn, jumpVx, aim, half)
+    half = half or HALF
     local b = { x = spawn.x, y = spawn.y, vx = jumpVx, vy = Config.JUMP_VY }
     local bounces = 0
     for _ = 1, 30 * 60 do
@@ -20,9 +23,9 @@ local function simulate(spawn, jumpVx, aim)
         Physics.step(b, DT)
         Physics.collideWalls(b)
         -- Perfect tracking: net chases the victim's x, offset by the aim.
-        local netX = clampNet(b.x - aim * HALF)
-        if Physics.isCatch(prevY, b, netX) then
-            Physics.bounce(b, netX)
+        local netX = clampNet(b.x - aim * half, half)
+        if Physics.isCatch(prevY, b, netX, half) then
+            Physics.bounce(b, netX, half)
             bounces = bounces + 1
         end
         if Physics.isRescued(b) then return "rescued", bounces end
@@ -191,4 +194,33 @@ test("landingX predicts where a jumper crosses the catch line", function()
         while b.y < line do Physics.step(b, 1 / 240) end
         check(math.abs(predicted - b.x) < 1.5, string.format("predicted %.1f, actual %.1f", predicted, b.x))
     end
+end)
+
+
+for _, case in ipairs({ { "widest", WIDEST }, { "narrowest", NARROWEST } }) do
+    local label, half = case[1], case[2]
+
+    test("every window's first fall is catchable with the " .. label .. " net", function()
+        local lo, hi = Physics.netRange(half)
+        eachSpawn(function(p, vx, l)
+            local b = { x = p.x, y = p.y, vx = vx, vy = Config.JUMP_VY }
+            while b.y < Physics.catchLine() do Physics.step(b, DT) end
+            check(b.x >= lo - half and b.x <= hi + half, l .. ": lands at x=" .. b.x)
+        end)
+    end)
+
+    test("every aim reaches the ambulance with the " .. label .. " net", function()
+        eachSpawn(function(p, vx, l)
+            for _, aim in ipairs({ 0, 0.5, 0.9 }) do
+                local outcome = simulate(p, vx, aim, half)
+                check(outcome == "rescued", l .. " aim " .. aim .. ": " .. outcome)
+            end
+        end)
+    end)
+end
+
+test("hit position is relative to the net, so aim means the same at any width", function()
+    check(Physics.hitPosition(100 + WIDEST, 100, WIDEST) == 1, "right edge of the widest net")
+    check(Physics.hitPosition(100 + NARROWEST, 100, NARROWEST) == 1, "right edge of the narrowest net")
+    check(Physics.hitPosition(100 + NARROWEST, 100, WIDEST) == NARROWEST / WIDEST, "same offset, wider net, less aim")
 end)

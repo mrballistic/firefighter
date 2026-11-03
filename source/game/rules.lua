@@ -29,6 +29,21 @@ function Rules.timeScale(score)
     return math.min(Config.TIME_SCALE_MAX, 1 + step(score) * Config.TIME_SCALE_STEP)
 end
 
+-- Net width in px for a score: starts wide, narrows each difficulty step.
+-- Always even, so the net is symmetric around its center.
+function Rules.netWidth(score)
+    local w = Config.NET_WIDTH_START - step(score) * Config.NET_WIDTH_STEP
+    w = math.max(Config.NET_WIDTH_MIN, w)
+    return w - w % 2
+end
+
+-- How many extra lives going from oldScore to newScore earns (thresholds
+-- crossed), before the MAX_LIVES cap, which the caller applies.
+function Rules.extraLivesEarned(oldScore, newScore)
+    local every = Config.EXTRA_LIFE_EVERY
+    return math.floor(newScore / every) - math.floor(oldScore / every)
+end
+
 -- Points for a rescue that took `bounces` catches. Returns points, isExpress.
 function Rules.rescueScore(bounces)
     if bounces <= Config.EXPRESS_MAX_BOUNCES then
@@ -43,9 +58,9 @@ end
 -- Landings close together on the ground are fine at any timing (one net
 -- position catches both). Otherwise the time gap must cover the crank travel
 -- plus reaction time. timeScale converts game seconds to real seconds: at
--- 1.4x the player has less real time for the same game-time gap.
-function Rules.landingsCompatible(a, b, timeScale)
-    local dx = math.abs(a.x - b.x) - Config.NET_HALF_WIDTH
+-- 1.3x the player has less real time for the same game-time gap.
+function Rules.landingsCompatible(a, b, timeScale, half)
+    local dx = math.abs(a.x - b.x) - (half or Config.NET_HALF_WIDTH)
     if dx <= 0 then return true end
     local realGap = math.abs(a.t - b.t) / (timeScale or 1)
     return realGap >= dx / Config.FAIR_NET_SPEED + Config.FAIR_REACTION
@@ -60,12 +75,12 @@ end
 -- Is launching `candidate` (a body) fair given the bodies already in the air?
 -- Only each jumper's NEXT landing is checked: later bounces go where the
 -- player aims them, so clashes after that are the player's to manage.
-function Rules.fairToLaunch(candidate, others, timeScale)
+function Rules.fairToLaunch(candidate, others, timeScale, half)
     local mine = nextLanding(candidate)
     if not mine then return false end
     for _, o in ipairs(others) do
         local theirs = nextLanding(o)
-        if theirs and not Rules.landingsCompatible(mine, theirs, timeScale) then
+        if theirs and not Rules.landingsCompatible(mine, theirs, timeScale, half) then
             return false
         end
     end
@@ -75,7 +90,7 @@ end
 -- Pick a fair jump: a body {x, y, vx, vy} from a random window and speed, or
 -- nil if none of FAIR_LAUNCH_TRIES candidates is fair right now (try again
 -- next frame). `random` defaults to math.random (injectable for tests).
-function Rules.chooseLaunch(spawnPoints, others, timeScale, random)
+function Rules.chooseLaunch(spawnPoints, others, timeScale, random, half)
     random = random or math.random
     for _ = 1, Config.FAIR_LAUNCH_TRIES do
         local p = spawnPoints[random(1, #spawnPoints)]
@@ -84,7 +99,7 @@ function Rules.chooseLaunch(spawnPoints, others, timeScale, random)
             vx = random(Config.JUMP_VX_MIN, Config.JUMP_VX_MAX),
             vy = Config.JUMP_VY,
         }
-        if Rules.fairToLaunch(body, others, timeScale) then return body end
+        if Rules.fairToLaunch(body, others, timeScale, half) then return body end
     end
     return nil
 end

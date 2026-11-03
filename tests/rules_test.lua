@@ -69,3 +69,27 @@ test("chooseLaunch returns nil rather than an unfair jump, and a fair one when i
     local b = Rules.chooseLaunch(Config.spawnPoints(), {}, 1)
     check(b and b.vx >= Config.JUMP_VX_MIN and b.vx <= Config.JUMP_VX_MAX and b.vy == Config.JUMP_VY, "valid body")
 end)
+
+
+test("net starts wide, narrows each step, never below the minimum, always even", function()
+    check(Rules.netWidth(0) == Config.NET_WIDTH_START, "start")
+    check(Rules.netWidth(499) == Config.NET_WIDTH_START, "no change before the first step")
+    check(Rules.netWidth(500) == Config.NET_WIDTH_START - Config.NET_WIDTH_STEP, "first step")
+    check(Rules.netWidth(1e6) == Config.NET_WIDTH_MIN, "floor")
+    for s = 0, 6000, 250 do check(Rules.netWidth(s) % 2 == 0, "even at " .. s) end
+end)
+
+test("a wider net makes more landings catchable together", function()
+    local a, b = { t = 1, x = 100 }, { t = 1, x = 130 }
+    check(Rules.landingsCompatible(a, b, 1, Config.NET_WIDTH_START / 2), "30 px apart: one wide net covers both")
+    check(not Rules.landingsCompatible(a, b, 1, Config.NET_WIDTH_MIN / 2), "but not the narrowest")
+end)
+
+
+test("an extra life at every 10,000 points", function()
+    check(Rules.extraLivesEarned(9900, 9950) == 0, "below the line")
+    check(Rules.extraLivesEarned(9950, 10050) == 1, "crossing 10,000")
+    check(Rules.extraLivesEarned(10050, 10150) == 0, "already past it")
+    check(Rules.extraLivesEarned(19950, 20100) == 1, "crossing 20,000")
+    check(Rules.extraLivesEarned(0, 100) == 0, "not at the start")
+end)

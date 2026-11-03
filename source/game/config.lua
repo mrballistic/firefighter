@@ -20,7 +20,11 @@ Config = {
 
     -- Net (firefighters). NET_Y is the top surface of the net.
     NET_Y = 220,
-    NET_WIDTH = 48,
+    NET_WIDTH = 48,           -- the art's width, and the reference width for tools/tests
+    NET_WIDTH_START = 72,     -- the net starts wide and forgiving...
+    NET_WIDTH_STEP = 4,       -- ...loses this much every difficulty step (SPEEDUP_EVERY points)...
+    NET_WIDTH_MIN = 44,       -- ...down to this (reached at 3,500 points)
+    NET_RESIZE_SPEED = 24,    -- px/s: narrowing animates instead of snapping
     CRANK_SENSITIVITY = 2.0,  -- pixels per degree of crank
     DPAD_SPEED = 220,         -- pixels per second (fallback control)
 
@@ -46,6 +50,8 @@ Config = {
 
     -- Rules
     START_LIVES = 3,
+    EXTRA_LIFE_EVERY = 10000, -- a life for every this many points...
+    MAX_LIVES = 5,            -- ...up to this many at once
     SCORE_PER_RESCUE = 100,
     EXPRESS_MAX_BOUNCES = 2,  -- rescue in this many bounces or fewer...
     EXPRESS_BONUS = 50,       -- ...earns this on top
@@ -58,7 +64,7 @@ Config = {
     SPAWN_INTERVAL_STEP = 0.25, -- ...minus this per step...
     SPAWN_INTERVAL_MIN = 1.5, -- ...down to this
     TIME_SCALE_STEP = 0.05,   -- game speed +5% per step...
-    TIME_SCALE_MAX = 1.4,     -- ...capped here
+    TIME_SCALE_MAX = 1.3,     -- ...capped here (reached at 3,000 points)
 
     -- Fair spawning: an extra jumper only leaps if a player cranking at
     -- FAIR_NET_SPEED could get from every other jumper's next landing to this
