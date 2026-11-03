@@ -16,7 +16,7 @@
 - Victims at once: 1, then 2 at 500 points, then 3 at 2,000.
 - Every 500 points: game time runs 5% faster (capped at 1.3×, reached at 3,000), and the gap between extra jumpers drops 0.25 s (from 3 s down to 1.5 s).
 - Time scaling keeps trajectories identical, so tested reachability holds at any speed.
-- **Fair spawning** (`Rules.chooseLaunch`): an extra jumper leaps only if its first landing and every other jumper's next landing are reachable at 300 px/s of crank travel plus 0.2 s of reaction time (scaled by game speed); otherwise it waits a frame and retries. Measured with `scripts/fairness.lua` at 300 px/s: the two-jumper stage went from 8.4 misses/min (68% unavoidable) to 1.2/min (0%); the three-jumper stage from 18.1/min to 3.6/min (about 1/min still unavoidable, all from clashes after the first bounce). More slack made it worse, so 300/0.2 stays.
+- **Fair spawning** (`Rules.chooseLaunch`): an extra jumper leaps only if its first landing and every other jumper's next landing are reachable at 300 px/s of crank travel plus 0.2 s of reaction time (scaled by game speed); otherwise it waits a frame and retries. Measured with `scripts/fairness.lua` at 300 px/s when introduced (fixed 48 px net): the two-jumper stage went from 8.4 misses/min (68% unavoidable) to 1.2/min (0%); the three-jumper stage from 18.1/min to 3.6/min. More slack made it worse, so 300/0.2 stays. With the narrowing net and 1.3x cap (current): 0.7 misses/min at 1,000 points, 2.6 at 2,500, 6.0 at 4,000.
 
 ## Menu
 - The title is cropped from the launcher card (`scripts/make_title.py`).
@@ -29,7 +29,9 @@
 - Score popups ("+100", "EXPRESS +150", "MISS"), screen shake on a miss, ambulance flash on a rescue.
 - Opening the Playdate menu auto-pauses.
 
+## Identity
+Title **Crank & Catch**; bundle ID `com.mrballistic.crankandcatch`; card subtitle "Bounce to safety".
+
 ## Known open questions
-- How the busy stages feel on hardware now that spawning is fair.
+- How the busy stages feel over longer hardware sessions.
 - Endgame (3,500+: 44 px net, 1.3×, three jumpers): softened from 40 px / 1.4×. Fairness probe at 300 px/s: 9.7 → 6.0 misses/min, unavoidable 49% → 30%; at 450 px/s, 0.6 misses/min. Still the hardest stretch at a relaxed pace; extra lives help.
-- Title is **Crank & Catch**, bundle ID `com.mrballistic.crankandcatch`.

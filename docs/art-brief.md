@@ -43,7 +43,7 @@ throws them back toward the building. Get them into the ambulance to score.
 | File | Size (px) | What it is | Must-haves |
 |---|---|---|---|
 | `building.png` | 40 × 200 | The burning building; its bottom sits on the screen's bottom edge | Five windows on the **right-hand face**, centered at y = 15, 45, 75, 105, 135 (from the top of the image), each about 20×20. Jumpers appear at the right edge at those heights. Flames and smoke welcome. |
-| `firefighters.png` | 48 × 20 | Two firefighters holding a net between them | The **net's top surface must be exactly at row 10** (rows 10–13 = net). Firefighters stand at the far left and far right ends (about 5 px each). **Keep aim marks on the net**: a center notch plus quarter ticks. Players aim with them. |
+| `firefighters.png` | 48 × 20 | Two firefighters holding a net between them | Each firefighter fits within the **outer 5 columns** on their side, holding the net at **row 10** (rows 10–13). Only those columns are used: the game draws the net itself between them, with its aim marks, at the current width. |
 | `victim.png` | 15 × 15 | A jumper, mid-air | Reads as a person at 15 px. Arms up or flailing. |
 | `victim-table-15-15.png` *(optional, replaces `victim.png`)* | 15 × 15 per frame | Same jumper, flailing | Frames side by side (4 frames = 60 × 15). Loops at 0.12 s/frame; each jumper starts at a random frame. |
 | `building-table-40-200.png` *(optional, replaces `building.png`)* | 40 × 200 per frame | Flames flickering in the windows | Same window positions in every frame. Loops at 0.18 s/frame. |
@@ -57,7 +57,7 @@ throws them back toward the building. Get them into the ambulance to score.
 ### Layout reference (screen coordinates, 400 × 240)
 
 - Building: x 10–50, y 40–240.
-- Net: slides between x ≈ 74 and 326; its surface is at y = 220.
+- Net: its surface is at y = 220. It is 72 px wide at the start (center slides between x 86 and 314) and narrows to 44 px (x 72 to 328).
 - Ambulance: x 350–390, y 205–235.
 - Highest bounce reaches about y = 115; jumpers start between y = 55 and 175.
 - Menu: the title sits at y 6–59, with two text lines below it down to y ≈ 106.
