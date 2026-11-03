@@ -126,7 +126,7 @@ local function onRescued(victim)
         game.spawnTimer = 0 -- give the demo net time to walk back
         return
     end
-    local points, express = Rules.rescueScore(victim.body.bounces)
+    local points, express = Rules.rescueScore(victim.body.bounces, game.score)
     victim:remove()
     game.ambulance:flash()
     Sound.rescue(express)

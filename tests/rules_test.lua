@@ -86,10 +86,33 @@ test("a wider net makes more landings catchable together", function()
 end)
 
 
-test("an extra life at every 10,000 points", function()
-    check(Rules.extraLivesEarned(9900, 9950) == 0, "below the line")
-    check(Rules.extraLivesEarned(9950, 10050) == 1, "crossing 10,000")
-    check(Rules.extraLivesEarned(10050, 10150) == 0, "already past it")
-    check(Rules.extraLivesEarned(19950, 20100) == 1, "crossing 20,000")
+test("an extra life at every EXTRA_LIFE_EVERY points", function()
+    local e = Config.EXTRA_LIFE_EVERY
+    check(Rules.extraLivesEarned(e - 100, e - 50) == 0, "below the line")
+    check(Rules.extraLivesEarned(e - 50, e + 50) == 1, "crossing the first threshold")
+    check(Rules.extraLivesEarned(e + 50, e + 150) == 0, "already past it")
+    check(Rules.extraLivesEarned(2 * e - 50, 2 * e + 100) == 1, "crossing the second")
     check(Rules.extraLivesEarned(0, 100) == 0, "not at the start")
+end)
+
+test("extra lives come every 5,000 points", function()
+    check(Config.EXTRA_LIFE_EVERY == 5000, "tuned value")
+end)
+
+
+test("rescues are worth 10 more per speed-up, 100 up to 160 at full speed", function()
+    check(Rules.rescueScore(3, 0) == 100, "start")
+    check(Rules.rescueScore(3, 499) == 100, "before the first speed-up")
+    check(Rules.rescueScore(3, 500) == 110, "first speed-up")
+    check(Rules.rescueScore(3, 3000) == 160, "full speed")
+    check(Rules.rescueScore(3, 50000) == 160, "stops rising with the speed")
+    check(Rules.rescueScore(2, 3000) == 210, "Express adds a flat 50 on top")
+end)
+
+test("rescue value tracks the speed-up exactly", function()
+    for s = 0, 6000, 250 do
+        local expected = Config.SCORE_PER_RESCUE
+            + math.floor((Rules.timeScale(s) - 1) / Config.TIME_SCALE_STEP + 0.5) * Config.SCORE_PER_SPEEDUP
+        check(Rules.rescueScore(3, s) == expected, "at " .. s)
+    end
 end)

@@ -44,12 +44,22 @@ function Rules.extraLivesEarned(oldScore, newScore)
     return math.floor(newScore / every) - math.floor(oldScore / every)
 end
 
--- Points for a rescue that took `bounces` catches. Returns points, isExpress.
-function Rules.rescueScore(bounces)
+-- How many speed-ups are in effect at this score (stops rising once the
+-- speed-up hits its cap).
+function Rules.speedSteps(score)
+    local maxSteps = math.floor((Config.TIME_SCALE_MAX - 1) / Config.TIME_SCALE_STEP + 0.5)
+    return math.min(step(score), maxSteps)
+end
+
+-- Points for a rescue that took `bounces` catches, at the current score.
+-- Worth more as the game speeds up; Express adds a flat bonus on top.
+-- Returns points, isExpress.
+function Rules.rescueScore(bounces, score)
+    local points = Config.SCORE_PER_RESCUE + Rules.speedSteps(score or 0) * Config.SCORE_PER_SPEEDUP
     if bounces <= Config.EXPRESS_MAX_BOUNCES then
-        return Config.SCORE_PER_RESCUE + Config.EXPRESS_BONUS, true
+        return points + Config.EXPRESS_BONUS, true
     end
-    return Config.SCORE_PER_RESCUE, false
+    return points, false
 end
 
 -- Fair spawning ---------------------------------------------------------------
