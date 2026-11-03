@@ -1,80 +1,125 @@
-# 🚒 Crank & Catch
+# Crank & Catch
 
-A crank-controlled rescue game for [Playdate](https://play.date). People are jumping from a burning building: slide the net under them and bounce them across the screen into the ambulance. 🎮
+A crank-controlled rescue game for [Playdate](https://play.date). People are jumping from a burning building. Turn the crank to slide two firefighters and their net under each jumper, and bounce them across the street into a waiting ambulance.
 
-## 🎮 How it plays
-
-- 🎣 **Turn the crank** to slide the firefighters and their net (the D-pad works too).
-- 🎯 **Where they land on the net sets the throw.** Center sends them nearly straight up and a little forward: safe, and it buys time. The right side throws them toward the ambulance. The left side throws them back toward the building.
-- 🚑 **Get them into the ambulance** for 100 points, worth 10 more with each speed-up (up to 160 at full speed). Make it in **2 bounces or fewer** for an Express bonus (+50).
-- ❌ Three misses and it's over. Every 5,000 points earns an extra life (up to 5).
-- 📈 **It ramps up:** the net starts wide (72 px) and narrows 4 px every 500 points, down to 44 px at 3,500. A second jumper joins at 500 points and a third at 2,000, and every 500 points the action runs 5% faster (capped at +30%) with less time between jumpers.
-- ⚖️ **It's fair:** an extra jumper only leaps when a player cranking at a comfortable pace could reach both their first landing and everyone else's next one. Clashes after that come from where you aimed.
-
-| Control | Action |
+| Menu | Gameplay |
 |---|---|
-| 🎣 Crank / ✛ left-right | Move the net |
-| Ⓐ | Start / back to menu |
-| Ⓑ | Pause / resume (opening the Playdate menu also pauses) |
+| ![Menu screen with the attract-mode demo](screenshots/01-menu@2x.png) | ![Two jumpers in the air](screenshots/02-two-up@2x.png) |
 
-The high score is saved on the device. While the menu is up, the scene plays itself: the firefighters work through a stream of jumpers, as a demo of the aiming.
+## Gameplay
 
-## 🛠️ Building
+The central mechanic is aiming with the net. Every catch launches the jumper at the same speed; where they land on the net sets the angle:
 
-Requires the [Playdate SDK](https://play.date/dev/) (tested with 3.1.2) at `~/Developer/PlaydateSDK`, or wherever `PLAYDATE_SDK_PATH` points.
+- **Center:** nearly straight up with a slight forward lean. Safe, slow, and useful for holding one jumper while you deal with another.
+- **Right side:** a long throw toward the ambulance. Fewer bounces, more risk.
+- **Left side:** back toward the building, which bounces them back into play.
+
+A jumper who reaches the ambulance is rescued. A jumper who hits the ground costs a life.
+
+### Controls
+
+| Input | Action |
+|---|---|
+| Crank (or D-pad left/right) | Move the net |
+| A | Start a game; return to the menu from Game Over |
+| B | Pause and resume (opening the Playdate system menu also pauses) |
+
+### Scoring and difficulty
+
+| | |
+|---|---|
+| Rescue | 100 points, plus 10 for each speed-up in effect (up to 160 at full speed) |
+| Express rescue | 2 bounces or fewer: +50 on top |
+| Lives | 3 to start; an extra life every 5,000 points, up to 5 |
+| Net width | 72 px at the start, 4 px narrower every 500 points, down to 44 px at 3,500 |
+| Jumpers at once | 1, then 2 at 500 points, then 3 at 2,000 |
+| Game speed | 5% faster every 500 points, up to 1.3x at 3,000; extra jumpers arrive sooner too |
+
+**Fair spawning.** An additional jumper only leaps when a player cranking at a comfortable pace (300 px/s) could reach both its first landing and every other jumper's next landing. Clashes after that come from where the player chose to aim.
+
+The high score is saved on the device. While the menu is showing, the scene plays itself as a demo of the aiming.
+
+## Building
+
+Requires the [Playdate SDK](https://play.date/dev/) (developed against 3.1.2), installed at `~/Developer/PlaydateSDK` or wherever `PLAYDATE_SDK_PATH` points, and a stock `lua` for the tests (`brew install lua`).
 
 ```bash
-scripts/build.sh          # run tests, then build build/CrankAndCatch.pdx
-scripts/build.sh --run    # ...and open it in the Playdate Simulator
-scripts/build.sh --test   # tests only (no SDK needed, just `lua`)
+scripts/build.sh          # run all tests, then build build/CrankAndCatch.pdx
+scripts/build.sh --run    # as above, then open the build in the Playdate Simulator
+scripts/build.sh --test   # tests only; no SDK required
 ```
 
-## 📲 Installing on a Playdate
+## Installing on a Playdate
 
-- **Sideload over Wi-Fi (works everywhere):** zip the build (`cd build && zip -r CrankAndCatch.pdx.zip CrankAndCatch.pdx`), upload it at [play.date/account/sideload](https://play.date/account/sideload/), then on the Playdate open **Settings → Games**.
-- **USB:** `scripts/install_device.sh` puts the Playdate in disk mode, copies the game into `Games/`, and launches it. The Playdate must be unlocked and on a data cable. Machines with endpoint security that blocks USB storage will refuse the disk ("The disk you attached was not readable"); use sideloading there. Never click **Initialize** on that dialog, because it erases the Playdate's games and saves.
+**Sideloading (recommended).** Download `CrankAndCatch.pdx.zip` from the [latest release](https://github.com/mrballistic/firefighter/releases/latest), or zip your own build:
 
-## 🧪 Tests
+```bash
+cd build && zip -r CrankAndCatch.pdx.zip CrankAndCatch.pdx
+```
 
-The physics, scoring and difficulty code is plain Lua with no Playdate dependencies, so it is tested with a stock `lua` (`brew install lua`):
+Upload the zip at [play.date/account/sideload](https://play.date/account/sideload/), then open **Settings > Games** on the Playdate; the device downloads it over Wi-Fi.
 
-- `tests/run.lua`: unit tests. Beyond the basics, they check playability: every window's jumper lands within reach of the net, the highest bounce stays on screen, aiming further right never takes more bounces, overshoots still end in the ambulance, and the Express bonus is achievable but not by safe center catches.
-- `tests/smoke.lua`: runs the real `main.lua` headless against a stubbed Playdate API, with a scripted player, through menu → play → pause → game over → second game → relaunch. It catches runtime errors in game logic. It can't catch a wrong Playdate API call, because the stubs accept anything, so check changes in the simulator too.
-- `SMOKE_ART=1 lua tests/smoke.lua`: the same run with every image present as a 4-frame sheet. It checks the animations (flames cycle, firefighters step only while moving, everything freezes on pause) and the draw order.
-- `scripts/check_art.py`: checks every PNG is pure 1-bit and that sheets divide into whole frames (`uv run --with pillow python scripts/check_art.py`).
-- `scripts/make_title.py`: crops the title lettering out of the launcher card into `source/images/title.png`, which the menu uses. Re-run it after changing the card.
-- `scripts/prep_sounds.py`: turns source audio (mp3 and others) into trimmed Playdate WAVs.
-- `scripts/fairness.lua`: simulates the multi-jumper stages at a capped crank speed and reports how many misses no player could have avoided (`FAIR_OFF=1` for the baseline without fair spawning).
-- `scripts/screenshots.sh`: captures real screenshots from the simulator. A driver (`scripts/capture/`) plays a copy of the game and saves the frame at set moments, into `screenshots/` at 400×240 and 800×480.
-- `scripts/tune.lua`: a parameter sweep that prints bounces-to-rescue by aim for a grid of bounce speeds and angles. Use it before changing the physics numbers.
+**USB.** `scripts/install_device.sh` puts a connected Playdate into data-disk mode, copies the game into `/Games` and launches it. The Playdate must be unlocked and connected with a data-capable cable. Computers whose endpoint security blocks USB storage will refuse the disk ("The disk you attached was not readable"); use sideloading on those. Never choose **Initialize** in that dialog: it erases the Playdate's games and saves.
 
-## 📁 Layout
+## Testing
+
+Game logic that doesn't touch the Playdate API (configuration, physics, scoring, difficulty, fair spawning) is plain Lua, so it runs under a stock interpreter.
+
+| Command | What it covers |
+|---|---|
+| `lua tests/run.lua` | Unit and playability tests: every window's jumper is catchable and every aim reaches the ambulance at both the widest and narrowest net, the highest bounce stays on screen, aiming further right never costs bounces, the Express bonus is achievable, and the scoring, net-width, extra-life and fair-spawning rules. |
+| `lua tests/smoke.lua` | Runs the real `main.lua` headless against a stubbed Playdate API with a scripted player: menu, attract mode, play, pause, system-menu pause, game over, a second game and a relaunch. |
+| `SMOKE_ART=1 lua tests/smoke.lua` | The same run with every image present as a 4-frame sheet: animation behavior, draw order and the background. |
+
+The smoke-test stubs accept any Playdate API call, so they can't catch a misspelled or misused SDK function. Check changes in the simulator as well. (The stubs do mimic one known trap: Playdate sprites own their `width` and `height`, and writes to them are rejected.)
+
+## Tools
+
+| Script | Purpose |
+|---|---|
+| `scripts/tune.lua` | Sweeps bounce speed and angle settings and reports bounces-to-rescue for each aim. Use it before changing the physics constants. |
+| `scripts/fairness.lua` | Simulates the multi-jumper stages at a capped crank speed and reports misses per minute and how many no player could have avoided. `FAIR_OFF=1` gives a baseline without fair spawning. |
+| `scripts/screenshots.sh` | Captures screenshots from the simulator. A driver in `scripts/capture/` plays a copy of the game and saves frames at set moments into `screenshots/`, at 400x240 and 800x480. |
+| `scripts/check_art.py` | Verifies every PNG is strictly 1-bit and that animation sheets divide into whole frames. Run with `uv run --with pillow python scripts/check_art.py`. |
+| `scripts/make_title.py` | Crops the title lettering from the launcher card into `source/images/title.png` for the menu. Re-run after changing the card. |
+| `scripts/prep_sounds.py` | Converts source audio (MP3, AIFF, M4A) into trimmed 16-bit mono WAVs for the game. |
+| `scripts/install_device.sh` | USB install, described above. |
+
+## Project layout
 
 ```
 source/
-├── main.lua                 # state machine, game loop, scoring, UI
-├── pdxinfo                  # name, bundle ID, version
-└── game/
-    ├── config.lua           # every layout and tuning constant (pure Lua)
-    ├── physics.lua          # motion, catch detection, bounce-by-hit-position (pure Lua)
-    ├── rules.lua            # scoring and difficulty ramp (pure Lua)
-    ├── assets.lua           # loads source/images/* if present, else placeholder
-    ├── sound.lua            # synth effects; source/sounds/*.wav override them
-    ├── effects.lua          # score popups, screen shake
-    └── entities/            # building, firefighters (net), ambulance, victim sprites
-tests/                       # unit + smoke tests (see above)
-scripts/                     # build.sh, tune.lua
-docs/art-brief.md            # specs for original art and sound
+  main.lua               State machine, game loop, scoring, spawning, UI
+  pdxinfo                Name, bundle ID, version, launcher images
+  game/
+    config.lua           All layout and tuning constants (pure Lua)
+    physics.lua          Motion, catch detection, bounce by hit position (pure Lua)
+    rules.lua            Scoring, difficulty, net width, fair spawning (pure Lua)
+    assets.lua           Image loading with placeholder fallback; animation helper
+    sound.lua            Synthesized effects, overridden by WAVs in source/sounds/
+    effects.lua          Score popups and screen shake
+    entities/            Building, smoke, firefighters (net), ambulance, jumpers
+  images/                1-bit art, including 4-frame animation sheets
+  sounds/                Bounce and splat samples
+tests/                   Unit, playability and smoke tests
+scripts/                 Build, install, tuning, fairness, screenshot and asset tools
+screenshots/             Captured from the simulator
+docs/                    Art and sound specification; source audio
+memory_bank/             Design and implementation notes
 ```
 
-### How the bounce works
+## Design notes
 
-Each catch launches the victim at a fixed speed (`BOUNCE_SPEED`). Only the angle depends on where they land. With hit position `h` from −1 (left edge) to +1 (right edge), the angle from vertical is `BOUNCE_BIAS_DEG + h × BOUNCE_SPREAD_DEG` (5° ± 15° today, at 280 px/s: high, readable arcs of about 1.4 s each). Constant speed keeps it predictable, so the player aims by positioning alone. The right edge of the screen is the ambulance's back door: an overshoot drops in rather than ricocheting back.
+**Bounce.** With hit position `h` running from -1 (left edge) to +1 (right edge), the launch angle from vertical is `BOUNCE_BIAS_DEG + h * BOUNCE_SPREAD_DEG`, currently 5° ± 15° at 280 px/s. That gives arcs about 98 px high and 1.4 s long. Speed is constant, so the outcome depends only on where the player puts the net. Hit position is measured relative to the net's current width, so aiming means the same thing as the net narrows.
 
-## 🎨 Art and sound
+**Overshoots.** The right edge of the screen acts as the ambulance's back door: a throw that overshoots drops in rather than ricocheting back into play.
 
-The art is in `source/images/` (several pieces are 4-frame animated sheets) and the sounds are in `source/sounds/`. Anything missing falls back to a placeholder drawn in code or a synth beep. To replace a piece, drop in correctly sized PNGs into `source/images/` and WAVs into `source/sounds/`, and they replace the placeholders automatically, one file at a time. Sizes, formats and must-haves are in [`docs/art-brief.md`](docs/art-brief.md).
+**Time scaling.** Difficulty speeds up simulation time rather than changing gravity or launch speed. Trajectories keep their shape, so the reachability guarantees verified by the tests hold at every speed.
 
-## 📄 License
+## Art and audio
+
+All art is original 1-bit pixel art in `source/images/`. The building, firefighters, jumpers and roof smoke are animated with 4-frame sheets. The bounce and splat effects are samples in `source/sounds/`, and other effects are synthesized. Any missing image or sound falls back to a placeholder drawn in code or a synthesized tone, so assets can be replaced one file at a time. Sizes, formats and requirements are in [`docs/art-brief.md`](docs/art-brief.md).
+
+## License
 
 MIT. See [LICENSE.md](LICENSE.md).
