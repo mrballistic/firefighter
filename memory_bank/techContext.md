@@ -20,6 +20,9 @@
 - Sideload: zip the `.pdx`, upload at play.date/account/sideload (device must be registered to the account), then open Game Library on the device (Settings > Games on older system software). The GitHub release carries the zip.
 - USB: `scripts/install_device.sh` (pdutil data-disk mode). Blocked on the main dev machine by corporate endpoint security, which rejects the Playdate's disk as unreadable.
 
+## Web page deploy
+- `www/` deploys to mrballistic.com/crank-and-catch via `.github/workflows/www.yml` on `www-v*` tags, mirroring RaidCalculator2's `www.yml`: rsync over SSH to `132.148.79.144:/var/www/html/crank-and-catch` as unprivileged `crank-deploy`; secrets in the tag-restricted `website` environment. Setup and release steps: `docs/web/DEPLOY.md`.
+
 ## Config
 All layout and tuning numbers live in `source/game/config.lua`. Derived values (catch line, ambulance edges, spawn points) are computed there; net range depends on the current width via `Physics.netRange(half)`.
 

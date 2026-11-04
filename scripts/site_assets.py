@@ -1,4 +1,4 @@
-"""Build the static web assets for the game's web page into site/assets/.
+"""Build the static web assets for the game's web page into www/assets/.
 
     uv run --with pillow python scripts/site_assets.py
 
@@ -14,7 +14,7 @@ every game pixel stays a crisp square.
 import os
 from PIL import Image
 
-OUT = "site/assets"
+OUT = "www/assets"
 DARK, LIGHT = (0x31, 0x2F, 0x28), (0xB1, 0xAF, 0xA8)
 PAGE_BG = (0x1D, 0x1C, 0x18)  # darkest gray, for composed images
 

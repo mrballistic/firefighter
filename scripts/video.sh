@@ -5,7 +5,7 @@
 # The capture driver (scripts/capture/capture_driver.lua, "video" mode) plays
 # the attract-mode menu for 5 s, presses Start, plays a real game, and writes
 # every frame. Highlight moments (Express, net narrowing, misses) are logged.
-# This script then encodes, into site/assets/video/:
+# This script then encodes, into www/assets/video/:
 #   crank-and-catch-lcd.{mp4,webm}    Playdate screen tones (#312f28 / #b1afa8), 1200x720
 #   crank-and-catch-1bit.{mp4,webm}   pure black and white, 1200x720
 #   crank-and-catch-poster-lcd.png    first gameplay frame, for the <video> poster
@@ -19,7 +19,7 @@ cd "$(dirname "$0")/.."
 ROOT="$(pwd)"
 SDK="${PLAYDATE_SDK_PATH:-$HOME/Developer/PlaydateSDK}"
 RAW="$ROOT/build/video"
-DEST="$ROOT/site/assets/video"
+DEST="$ROOT/www/assets/video"
 LOG="$SDK/Disk/Data/com.mrballistic.crankandcatch.capture/capturelog.json"
 
 command -v ffmpeg >/dev/null || { echo "ffmpeg not found (brew install ffmpeg)" >&2; exit 1; }
