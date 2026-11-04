@@ -2,8 +2,8 @@
 --
 -- If source/images/<name>.png (or an animated <name>-table-W-H.png) exists,
 -- it's used; otherwise the entity draws its own placeholder. Art can be
--- dropped in one file at a time without code changes. Names and sizes are in
--- docs/art-brief.md.
+-- dropped in one file at a time without code changes. A replacement must
+-- match the existing file's name and pixel size (collision depends on it).
 
 local gfx <const> = playdate.graphics
 

@@ -15,7 +15,7 @@
 
 ## One-time setup
 
-This reuses the RAID page's deploy setup: same server, same `raid-deploy` user, same key. Status: the `website` environment exists and admits only `www-v*` tags. Two things remain.
+This reuses the RAID page's deploy setup: same server, same `raid-deploy` user, same key. **Status: done (2026-11-04).** The directory exists, both secrets are set, and `www-v1.0.0` deployed successfully. The steps below are kept for reference (e.g. rotating the key).
 
 ### 1. Give `raid-deploy` this site's directory (on the server, as an admin)
 
