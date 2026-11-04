@@ -8,6 +8,7 @@ Version 0.5 is released and plays well on hardware. Work now is balance and poli
 - **0.3:** fair spawning; attract-mode menu with title cropped from the card; higher bounce (280 px/s at 5° ± 15°); background art restored (`gfx.sprite.removeAll()` deletes the background sprite, so it's re-registered on every scene build); score at top center; popups clamped on screen; American spelling; screenshot tooling.
 - **0.4:** net starts at 72 px and narrows 4 px per 500 points to a 44 px floor; extra life every 10,000 points; speed-up capped at 1.3x; fixed the net storing its width in the sprite's read-only `width` (it rendered 0 px wide on the device).
 - **0.5:** extra life every 5,000 points; rescues worth 10 more per speed-up in effect (100 to 160).
+- **0.6:** popups stack instead of overlapping (a rescue that crosses a threshold also narrows the net, so both popped in the same spot); smoke test checks it. Added the web page kit: `site/BRIEF.md` for Claude Design, `site/assets/` (gameplay video, screenshots, art, icons, social images, Todd's `device-hero.png`), `site/media-kit-derived/` (device photo, mockups, CSS `matrix3d` for the video-in-device overlay). New tools: `scripts/video.sh`, `scripts/site_assets.py`, `scripts/capture/build_capture.sh`. Page will live at mrballistic.com/crank-and-catch; Panic approved redistributing media-kit images.
 
 ## Release process
 1. Bump `version` and `buildNumber` in `source/pdxinfo`.

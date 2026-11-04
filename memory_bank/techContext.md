@@ -17,7 +17,7 @@
 - Simulator Lua errors appear only in its Console window (not stdout or the system log); take a screenshot of it to read them.
 
 ## Installing on hardware
-- Sideload: zip the `.pdx`, upload at play.date/account/sideload, then Settings > Games on the device. The GitHub release carries the zip.
+- Sideload: zip the `.pdx`, upload at play.date/account/sideload (device must be registered to the account), then open Game Library on the device (Settings > Games on older system software). The GitHub release carries the zip.
 - USB: `scripts/install_device.sh` (pdutil data-disk mode). Blocked on the main dev machine by corporate endpoint security, which rejects the Playdate's disk as unreadable.
 
 ## Config

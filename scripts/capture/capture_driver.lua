@@ -1,19 +1,26 @@
--- Screenshot driver. NOT part of the game: scripts/screenshots.sh copies the
--- game source to build/, appends `import "capture_driver"` to main.lua there,
--- and runs that copy in the Playdate Simulator.
+-- Capture driver. NOT part of the game: scripts/capture/build_capture.sh
+-- copies the game source to build/, appends `import "capture_driver"` to
+-- main.lua there, and the copy runs in the Playdate Simulator.
 --
--- It plays the game itself (fake buttons and crank, fixed random seed, silent,
--- 8x speed) and writes a PNG of the real rendered frame when each shot's
--- moment arrives, then quits the simulator.
+-- It plays the game itself (fake buttons and crank, fixed random seed,
+-- silent) in one of two modes, set by CAPTURE_MODE:
+--   "shots" (scripts/screenshots.sh): 8x speed; writes a PNG when each
+--           shot's moment arrives, then quits.
+--   "video" (scripts/video.sh): writes every frame to CAPTURE_OUT/frames/
+--           (menu attract mode, then a real game), logs highlight moments
+--           (Express, net narrowing, misses) for picking stills, then quits.
 --
--- CAPTURE_OUT (absolute output directory) is set by capture_config.lua, which
--- the script generates.
+-- CAPTURE_OUT and CAPTURE_MODE come from capture_config.lua, which the build
+-- script generates.
 
 import "capture_config"
 
 local gfx <const> = playdate.graphics
 
-local SPEED <const> = 8          -- game frames per simulator frame
+local VIDEO <const> = CAPTURE_MODE == "video"
+local SPEED <const> = VIDEO and 4 or 8      -- game frames per simulator frame
+local VIDEO_MENU_FRAMES <const> = 30 * 5    -- attract mode before pressing Start
+local VIDEO_FRAMES <const> = 30 * 48        -- total length of the recording
 local DT <const> = 1 / 30
 local NET_SPEED <const> = 450    -- px/s the scripted player cranks at (a brisk turn is ~720)
 local AIM <const> = 0.6          -- right of center: steady progress, few misses
@@ -54,7 +61,7 @@ local lastPopup = nil
 
 -- Progress log, readable on the host at
 -- <SDK>/Disk/Data/com.mrballistic.crankandcatch.capture/capturelog.json
-local log = { games = 1, maxScore = 0, captured = {} }
+local log = { games = 1, maxScore = 0, captured = {}, events = {} }
 local function writeLog(status)
     log.status, log.frame = status, frame
     playdate.datastore.write(log, "capturelog")
@@ -62,6 +69,7 @@ end
 local realPopup = Effects.popup
 Effects.popup = function(text, x, y)
     lastPopup = { text = text, frame = frame }
+    if VIDEO then log.events[#log.events + 1] = { frame = frame, text = text } end
     return realPopup(text, x, y)
 end
 
@@ -114,7 +122,10 @@ local function steer()
         if t and (not soonest or t < soonest) then target, soonest = v, t end
     end
     if not target then return end
-    local want = Physics.landingX(target.body) - AIM * n.half
+    -- In video mode each jumper gets its own aim, so the footage shows a mix
+    -- of short and long throws (and the odd Express).
+    if VIDEO and not target.captureAim then target.captureAim = 0.45 + math.random() * 0.45 end
+    local want = Physics.landingX(target.body) - (target.captureAim or AIM) * n.half
     local step = NET_SPEED * DT
     local dx = math.max(-step, math.min(step, want - n.x))
     input.crank = dx / Config.CRANK_SENSITIVITY
@@ -174,6 +185,18 @@ function playdate.update()
         realUpdate()
         log.maxScore = math.max(log.maxScore, tonumber(onScreen("^Score: (%d+)") or "0"))
 
+        if VIDEO then
+            playdate.simulator.writeToFile(gfx.getWorkingImage(),
+                string.format("%s/frames/f%05d.png", CAPTURE_OUT, frame))
+            if frame == VIDEO_MENU_FRAMES then pressQueue = 1 end
+            if frame >= VIDEO_FRAMES then
+                writeLog("video done")
+                playdate.simulator.exit()
+                return
+            end
+            goto continue
+        end
+
         -- The menu shot comes first; the gameplay shots in whatever order
         -- their moments arrive.
         for i, shot in ipairs(shots) do
@@ -202,5 +225,6 @@ function playdate.update()
             log.games = log.games + 1
             writeLog("restarting")
         end
+        ::continue::
     end
 end

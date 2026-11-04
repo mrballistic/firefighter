@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Device video overlay: reference implementation</title>
+<style>
+  body { margin: 0; background: #1d1c18; display: grid; place-items: center; min-height: 100vh; }
+
+  /* The photo is 1600 x 1600. Everything inside .device is laid out in that
+     photo's pixel space, then the whole box is scaled to fit .device-frame. */
+  .device-frame { width: min(90vw, 640px); aspect-ratio: 1; position: relative; overflow: hidden; }
+  .device { position: absolute; top: 0; left: 0; width: 1600px; height: 1600px;
+            transform-origin: 0 0; transform: scale(var(--s, 0.4)); }
+  .device img { position: absolute; inset: 0; width: 1600px; height: 1600px; }
+
+  /* The video is the Playdate's native 400 x 240, mapped onto the photo's
+     screen by a perspective transform (from device-screen.json). */
+  .device video {
+    position: absolute; top: 0; left: 0; width: 400px; height: 240px;
+    transform-origin: 0 0;
+    transform: matrix3d(1.896506, 0.026029, 0, -0.000077, 0.005046, 2.366709, 0, 0.000005, 0, 0, 1, 0, 165, 228, 0, 1);
+    image-rendering: pixelated;   /* keep the 1-bit pixels crisp */
+    object-fit: fill;
+  }
+</style>
+</head>
+<body>
+  <div class="device-frame">
+    <div class="device">
+      <!-- Todd's composite: the device already showing the game, so it looks right
+           before the video loads and when motion is reduced. -->
+      <img src="../assets/device-hero.png" alt="Crank & Catch running on a Playdate">
+      <video src="../assets/video/crank-and-catch-screen-400x240.mp4" autoplay muted loop playsinline
+             poster="../assets/video/crank-and-catch-screen-poster-400x240.png"
+             aria-label="Crank & Catch gameplay on a Playdate"></video>
+    </div>
+  </div>
+<script>
+  // Scale the 1600px photo space to whatever size the frame is.
+  const frame = document.querySelector('.device-frame');
+  const device = document.querySelector('.device');
+  new ResizeObserver(([e]) => device.style.setProperty('--s', e.contentRect.width / 1600)).observe(frame);
+</script>
+</body>
+</html>
