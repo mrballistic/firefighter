@@ -1,0 +1,159 @@
+# Deploys the game's web page (www/) to https://mrballistic.com/crank-and-catch/
+# when a website tag is pushed. Same release model as RaidCalculator2's www.yml:
+#
+# - Website tags are www-v<version> (www-v1.0.0). Plain v* tags are the game's
+#   own releases (v0.6.0), so the two never trigger each other.
+# - The target is /var/www/html/crank-and-catch, a directory that holds only
+#   this site. That makes a --delete sync safe (it prunes renamed or removed
+#   assets). A guard step refuses to run if DEPLOY_PATH ever stops ending in
+#   /crank-and-catch, because the shared web root holds other sites.
+#
+# Release:  git tag -a www-v1.0.0 -m "…" && git push origin www-v1.0.0
+#
+# Manual runs: dispatch with dry_run (on by default) to list every change,
+# including deletions, without writing. Run it from a www-v* tag ref: the
+# `website` environment that holds the SSH key only admits www-v* tags, so a
+# run from main (or any branch, or a fork) can't reach the secrets at all.
+# That matters because this repo is public.
+#
+# Server access: deploys as crank-deploy, an unprivileged user (no sudo) that
+# owns only /var/www/html/crank-and-catch. SSH_PRIVATE_KEY and SSH_KNOWN_HOSTS
+# live in the `website` environment. Setup steps: docs/web/DEPLOY.md.
+name: Deploy website
+
+on:
+  push:
+    tags: ["www-v*"]
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "List changes without writing to the server"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+# Never let two deploys rsync into the same directory at once.
+concurrency:
+  group: deploy-www
+  cancel-in-progress: false
+
+env:
+  DEPLOY_HOST: 132.148.79.144
+  DEPLOY_USER: crank-deploy
+  DEPLOY_PATH: /var/www/html/crank-and-catch
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: website
+      url: https://mrballistic.com/crank-and-catch/
+    steps:
+      # Keeps its credentials: the on-main check below runs git fetch.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Only deploy commits on main
+        run: |
+          git fetch --no-tags origin main
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
+            echo "::error::$GITHUB_REF_NAME is not on main; refusing to deploy."
+            exit 1
+          fi
+
+      # Dry runs may come from main itself; anything that writes must be a
+      # website release tag.
+      - name: Writes need a www-v tag
+        if: inputs.dry_run != true
+        run: |
+          if [ "$GITHUB_REF_TYPE" != "tag" ] || ! [[ "$GITHUB_REF_NAME" =~ ^www-v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::$GITHUB_REF_NAME is not a www-vMAJOR.MINOR.PATCH tag; refusing to deploy."
+            exit 1
+          fi
+
+      # --delete below is only safe because the destination is this site's own
+      # directory. If someone repoints DEPLOY_PATH at the shared web root, stop.
+      - name: Guard the deploy path
+        run: |
+          case "$DEPLOY_PATH" in
+            */crank-and-catch) ;;
+            *) echo "::error::DEPLOY_PATH ($DEPLOY_PATH) must end in /crank-and-catch; --delete would reach other sites."; exit 1 ;;
+          esac
+
+      # Static site, no build step, so check what would ship: the key files are
+      # present and every local src/href/srcset/poster/url() in the HTML and CSS
+      # points at a file that exists.
+      - name: Verify the site
+        run: |
+          python3 - <<'EOF'
+          import pathlib, re, sys
+          root = pathlib.Path("www")
+          required = ["index.html", "assets/icons/favicon.ico", "assets/icons/apple-touch-icon.png",
+                      "assets/social/og-image-1200x630.png"]
+          missing = [p for p in required if not (root / p).is_file()]
+          broken = []
+          for page in [*root.rglob("*.html"), *root.rglob("*.css")]:
+              text = page.read_text()
+              refs = re.findall(r'(?:src|href|poster)="([^"]+)"', text)
+              refs += [u.split()[0] for s in re.findall(r'srcset="([^"]+)"', text) for u in s.split(",")]
+              refs += re.findall(r"""url\(\s*['"]?([^'")]+)['"]?\s*\)""", text)
+              for ref in refs:
+                  if re.match(r"(?:[a-z]+:|//|#)", ref):
+                      continue
+                  target = (page.parent / ref.split("#")[0].split("?")[0]).resolve()
+                  if target.is_dir():
+                      target = target / "index.html"
+                  if not target.is_file():
+                      broken.append(f"{page.relative_to(root)} -> {ref}")
+          for p in missing:
+              print(f"::error::missing www/{p}")
+          for b in broken:
+              print(f"::error::broken reference: {b}")
+          sys.exit(1 if missing or broken else 0)
+          EOF
+          echo "www contains $(find www -type f | wc -l) files ($(du -sh www | cut -f1))"
+
+      # Secrets go through env, not ${{ }} interpolation into the shell, so a
+      # key containing shell metacharacters can't be mangled or expanded.
+      - name: Configure SSH
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
+        run: |
+          mkdir -p ~/.ssh
+          install -m 600 /dev/null ~/.ssh/deploy_key
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+          ssh-keygen -y -f ~/.ssh/deploy_key > /dev/null || {
+            echo "::error::SSH_PRIVATE_KEY is not a valid private key"; exit 1; }
+
+      # The trailing slashes matter: they sync the *contents* of www/ into
+      # DEPLOY_PATH, and rsync's --delete cannot reach outside the destination
+      # it's given. .DS_Store and local browser-test captures never ship.
+      # -t keeps mtimes so unchanged files are skipped; --omit-dir-times
+      # because directory times may not be settable by the deploy user.
+      - name: Deploy to server
+        env:
+          DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          if [ "$DRY_RUN" = "true" ]; then
+            echo "::notice::Dry run - no changes will be written"
+            EXTRA=--dry-run
+          else
+            EXTRA=""
+          fi
+          rsync -rltvz --omit-dir-times --delete --itemize-changes $EXTRA \
+            --exclude='.DS_Store' \
+            --exclude='.playwright-mcp/' \
+            --chmod=D755,F644 \
+            -e "ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes" \
+            www/ "${DEPLOY_USER}@${DEPLOY_HOST}:${DEPLOY_PATH}/"
+
+      - name: Clean up key
+        if: always()
+        run: rm -f ~/.ssh/deploy_key

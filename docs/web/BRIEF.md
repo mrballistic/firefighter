@@ -1,6 +1,6 @@
 # Crank & Catch: web page design brief
 
-A brief for designing a single web page for **Crank & Catch**, a free indie game for the Playdate handheld. Hand this file, the `site/assets/` folder and the `site/media-kit-derived/` folder to the designer.
+A brief for designing a single web page for **Crank & Catch**, a free indie game for the Playdate handheld. Hand this file, the `www/assets/` folder and the `docs/web/media-kit-derived/` folder to the designer. **Deliver the page as `www/index.html`**: `www/` is exactly what gets deployed, so asset paths are `assets/...` relative to it.
 
 ---
 
@@ -204,7 +204,7 @@ Small print under the steps:
 
 ## 6. Asset manifest
 
-All in `site/assets/`. Every image is strict 1-bit art (or its LCD-tone version); scale only by whole numbers.
+All in `www/assets/` (paths below are relative to it). Every image is strict 1-bit art (or its LCD-tone version); scale only by whole numbers.
 
 ### Video (`video/`)
 | File | Size | Use |
@@ -255,7 +255,7 @@ Each in `-lcd` (screen tones) and `-1bit` (white on transparent). Sheets are 4 f
 
 ## 7. Optional: the video inside a real Playdate (Option A)
 
-In `site/media-kit-derived/` (built from Panic's press photo; Panic has approved redistribution):
+In `docs/web/media-kit-derived/` (built from Panic's press photo; Panic has approved redistribution). These are source files and are **not deployed**; copy anything the page needs into `www/assets/`:
 
 | File | What |
 |---|---|
@@ -263,7 +263,7 @@ In `site/media-kit-derived/` (built from Panic's press photo; Panic has approved
 | `device-mockup-menu.png`, `device-mockup-gameplay.png` | Stills: the game composited onto the device's screen, perspective-matched. Good for the OG image or a no-JS fallback. |
 | `device-screen.json` | The screen's corner coordinates (pixels and percentages) and the CSS transform below. |
 | `device-video-demo.html` | **A working reference** of the video playing on the device's screen. Verified in Chromium. |
-| `../assets/device-hero.png` | **Todd's composite (preferred still):** 1600×1600, the gameplay screenshot on the device's screen with the photo's glass reflection kept over it, so it reads as a real photo. Use it as the hero image when not using the live video, and as the **base image for Option A**: put it under the video instead of `playdate-device.png`, so the device already shows the game before the video loads or when motion is reduced. Same photo and screen position, so it lines up exactly with the transform below. Also a good basis for a richer social image. |
+| `www/assets/device-hero.png` | **Todd's composite (preferred still):** 1600×1600, the gameplay screenshot on the device's screen with the photo's glass reflection kept over it, so it reads as a real photo. Use it as the hero image when not using the live video, and as the **base image for Option A**: put it under the video instead of `playdate-device.png`, so the device already shows the game before the video loads or when motion is reduced. Same photo and screen position, so it lines up exactly with the transform below. Also a good basis for a richer social image. |
 
 How it works: lay out a 1600×1600 box containing `assets/device-hero.png` (or the bare `playdate-device.png`), place the 400×240 `crank-and-catch-screen-400x240` video at its top-left with this transform, then scale the whole box to fit:
 
