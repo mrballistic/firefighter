@@ -21,7 +21,7 @@
 - USB: `scripts/install_device.sh` (pdutil data-disk mode). Blocked on the main dev machine by corporate endpoint security, which rejects the Playdate's disk as unreadable.
 
 ## Web page deploy
-- `www/` deploys to mrballistic.com/crank-and-catch via `.github/workflows/www.yml` on `www-v*` tags, mirroring RaidCalculator2's `www.yml`: rsync over SSH to `132.148.79.144:/var/www/html/crank-and-catch` as unprivileged `crank-deploy`; secrets in the tag-restricted `website` environment. Setup and release steps: `docs/web/DEPLOY.md`.
+- `www/` deploys to mrballistic.com/crank-and-catch via `.github/workflows/www.yml` on `www-v*` tags, mirroring RaidCalculator2's `www.yml`: rsync over SSH to `132.148.79.144:/var/www/html/crank-and-catch` as `raid-deploy` (the RAID page's unprivileged deploy user and key, shared by choice); secrets in this repo's tag-restricted `website` environment hold the same values as RaidCalculator2's. Setup and release steps: `docs/web/DEPLOY.md`.
 
 ## Config
 All layout and tuning numbers live in `source/game/config.lua`. Derived values (catch line, ambulance edges, spawn points) are computed there; net range depends on the current width via `Physics.netRange(half)`.

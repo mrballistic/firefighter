@@ -9,64 +9,54 @@
 | **Trigger** | Pushing a `www-vMAJOR.MINOR.PATCH` tag. Plain `v*` tags are game releases and never deploy the site. |
 | **Guards** | The commit must be on `main`; anything that writes must come from a `www-v*` tag; the deploy path must end in `/crank-and-catch`, because the sync uses `--delete` and the shared web root holds other sites. |
 | **Verification** | `www/index.html`, the favicon, the apple-touch icon and the social preview image exist, and every local `src`, `href`, `srcset`, `poster` and CSS `url()` in the HTML and CSS points at a real file. |
-| **Deploy** | `rsync --delete` over SSH as `crank-deploy`, an unprivileged user that owns only `/var/www/html/crank-and-catch`, with a pinned host key. `.DS_Store` and `.playwright-mcp/` never ship. 10-minute timeout. |
+| **Deploy** | `rsync --delete` over SSH as `raid-deploy`, the RAID page's unprivileged deploy user (same key, shared on purpose), which owns only `/var/www/html/raid` and `/var/www/html/crank-and-catch`, with a pinned host key. `.DS_Store` and `.playwright-mcp/` never ship. 10-minute timeout. |
 | **Secrets** | `SSH_PRIVATE_KEY` and `SSH_KNOWN_HOSTS` in the repository's `website` environment, which admits only `www-v*` tags, so a run from a branch or a fork can't reach them. The repo is public, which is why this matters. |
 | **Manual runs** | Dispatch **Deploy website** with `dry_run` on (the default) to list every file it would add, change or delete without writing. Dispatch it from a `www-v*` tag ref; the environment refuses anything else. |
 
 ## One-time setup
 
-Status: the `website` environment exists and admits only `www-v*` tags. The server user, the deploy key and the two secrets still need doing.
+This reuses the RAID page's deploy setup: same server, same `raid-deploy` user, same key. Status: the `website` environment exists and admits only `www-v*` tags. Two things remain.
 
-### 1. Make a deploy key (on your Mac)
-
-```bash
-ssh-keygen -t ed25519 -N "" -C "crank-deploy@github-actions (mrballistic/playdate-crank-and-catch)" -f ~/crank_deploy
-cat ~/crank_deploy.pub   # the public half, for step 2
-```
-
-### 2. Create the deploy user and directory (on the server, as an admin)
-
-Same pattern as `raid-deploy`: no sudo, owns only its site's directory.
+### 1. Give `raid-deploy` this site's directory (on the server, as an admin)
 
 ```bash
-sudo useradd -m -s /bin/bash crank-deploy
-sudo install -d -m 755 -o crank-deploy -g crank-deploy /var/www/html/crank-and-catch
-sudo install -d -m 700 -o crank-deploy -g crank-deploy ~crank-deploy/.ssh
-echo 'PASTE THE CONTENTS OF ~/crank_deploy.pub HERE' | sudo tee ~crank-deploy/.ssh/authorized_keys >/dev/null
-sudo chown crank-deploy:crank-deploy ~crank-deploy/.ssh/authorized_keys
-sudo chmod 600 ~crank-deploy/.ssh/authorized_keys
+sudo install -d -m 755 -o raid-deploy -g raid-deploy /var/www/html/crank-and-catch
 ```
 
-The web server already serves `/var/www/html/raid` at `/raid/`, so `/var/www/html/crank-and-catch` should appear at `/crank-and-catch/` with no web-server change. If the server only allows SSH logins for specific users (`AllowUsers` or `AllowGroups` in `sshd_config`), add `crank-deploy` the same way `raid-deploy` was added.
+The web server already serves `/var/www/html/raid` at `/raid/`, so `/var/www/html/crank-and-catch` should appear at `/crank-and-catch/` with no web-server change.
 
-### 3. Add the two secrets (on your Mac)
+### 2. Copy the RAID repo's two secrets into this repo (on your Mac)
+
+**Easiest:** `scripts/setup_deploy_secrets.sh [path/to/private-key]` (default `~/.ssh/raid_deploy_crank`). It checks the key matches its `.pub`, that `raid-deploy` can log in and write to the site's directory, and that the server's host key matches the one your Mac already trusts, then sets both secrets. The manual equivalent:
+
+GitHub secrets on a personal account belong to one repository and can't be read back, so the values have to be set again here. They are the same two values `RaidCalculator2`'s `website` environment holds:
 
 ```bash
 export GH_TOKEN="$(gh auth token --user mrballistic)"
 REPO=mrballistic/playdate-crank-and-catch
 
-# The private key
-gh secret set SSH_PRIVATE_KEY --env website --repo $REPO < ~/crank_deploy
+# The raid-deploy private key (wherever you keep it)
+gh secret set SSH_PRIVATE_KEY --env website --repo $REPO < /path/to/raid-deploy-key
 
-# The server's host key, pinned. Compare the fingerprint with the one you
-# trust for this server (it's the same host as the RAID page).
-ssh-keyscan -t ed25519 132.148.79.144 > /tmp/crank_known_hosts
-ssh-keygen -lf /tmp/crank_known_hosts
-gh secret set SSH_KNOWN_HOSTS --env website --repo $REPO < /tmp/crank_known_hosts
-
-# The private key now lives only in GitHub
-rm ~/crank_deploy /tmp/crank_known_hosts
+# The server's host key line (same host as the RAID page); compare the
+# fingerprint with the one you trust
+ssh-keyscan -t ed25519 132.148.79.144 > /tmp/known_hosts_web
+ssh-keygen -lf /tmp/known_hosts_web
+gh secret set SSH_KNOWN_HOSTS --env website --repo $REPO < /tmp/known_hosts_web
+rm /tmp/known_hosts_web
 ```
 
-### 4. Test the login (optional, on your Mac, before deleting the key)
+If the `raid-deploy` private key no longer exists anywhere but GitHub, make a new pair, append its public half to `~raid-deploy/.ssh/authorized_keys` on the server (keeping the existing line), and use the new private key here:
 
 ```bash
-ssh -i ~/crank_deploy crank-deploy@132.148.79.144 'pwd; ls -ld /var/www/html/crank-and-catch'
+ssh-keygen -t ed25519 -N "" -C "raid-deploy@github-actions (playdate-crank-and-catch)" -f ~/raid_deploy_crank
+# on the server: append ~/raid_deploy_crank.pub to ~raid-deploy/.ssh/authorized_keys
+gh secret set SSH_PRIVATE_KEY --env website --repo $REPO < ~/raid_deploy_crank && rm ~/raid_deploy_crank
 ```
 
 ## Releasing the page
 
-1. Put the page at `www/index.html` (from Claude Design; see `docs/web/BRIEF.md`) and merge to `main`.
+1. Edit `www/index.html` (the design is `docs/web/BRIEF.md` plus `docs/web/HANDOFF.md`), run `python3 scripts/check_page.py`, and merge to `main`.
 2. Tag and push; the push deploys:
 
    ```bash
@@ -85,5 +75,6 @@ ssh -i ~/crank_deploy crank-deploy@132.148.79.144 'pwd; ls -ld /var/www/html/cra
 | "broken reference: …" | A `src`/`href`/`poster`/`url()` points at a file that isn't in `www/`. The message names the page and the path. |
 | "is not on main; refusing to deploy" | The tag was made on a branch. Merge first, then tag the merge commit. |
 | A manual run is refused by its environment | It was dispatched from a branch. `website` admits only `www-v*` tags. |
-| `Permission denied (publickey)` | The public key isn't in `~crank-deploy/.ssh/authorized_keys`, its permissions are too open, or `sshd` doesn't allow the user. |
+| `Permission denied (publickey)` | `SSH_PRIVATE_KEY` isn't the `raid-deploy` key (or its public half isn't in `~raid-deploy/.ssh/authorized_keys`). |
+| `rsync: … Permission denied` writing files | `/var/www/html/crank-and-catch` isn't owned by `raid-deploy` (setup step 1). |
 | `Host key verification failed` | `SSH_KNOWN_HOSTS` doesn't match the server; rescan and compare the fingerprint. |

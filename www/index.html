@@ -1,0 +1,441 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>document.documentElement.classList.add('js')</script>
+<title>Crank &amp; Catch: a crank-powered rescue game for Playdate</title>
+<meta name="description" content="Turn the crank, catch the jumpers, and aim each bounce to get them to the ambulance. A free game for Playdate.">
+<link rel="canonical" href="https://mrballistic.com/crank-and-catch/">
+<meta name="theme-color" content="#1d1c18">
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="Crank &amp; Catch">
+<meta property="og:description" content="Turn the crank, catch the jumpers, and aim each bounce to get them to the ambulance. A free game for Playdate.">
+<meta property="og:url" content="https://mrballistic.com/crank-and-catch/">
+<meta property="og:image" content="https://mrballistic.com/crank-and-catch/assets/social/og-image-1200x630.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="The Crank &amp; Catch title screen: a burning building, a firefighter net and an ambulance in 1-bit pixel art">
+<meta name="twitter:card" content="summary_large_image">
+
+<link rel="icon" href="assets/icons/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png">
+<link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+
+<!-- Self-hosted OFL fonts (Latin subset; licenses in assets/fonts/). -->
+<link rel="preload" href="assets/fonts/space-grotesk-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
+
+<style>
+/* Variable fonts, one file per family, same weights the design was built with. */
+@font-face{font-family:'Inter';font-style:normal;font-weight:400 600;font-display:swap;src:url(assets/fonts/inter-latin.woff2) format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+@font-face{font-family:'JetBrains Mono';font-style:normal;font-weight:400 500;font-display:swap;src:url(assets/fonts/jetbrains-mono-latin.woff2) format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+@font-face{font-family:'Space Grotesk';font-style:normal;font-weight:500 700;font-display:swap;src:url(assets/fonts/space-grotesk-latin.woff2) format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+:root{
+  --page:#1d1c18; --screen-dark:#312f28; --screen-light:#b1afa8; --paper:#f5f5f0;
+  --fire:#ef5023; --fire-hover:#ff6c42; --muted:#8f8c85; --body-strong:#d6d4cd;
+  --rule:#312f28; --rule-soft:#2c2a24;
+  --fire-on-paper:#b03a12; --fire-on-paper-hover:#8a2c0c;
+  --display:'Space Grotesk',system-ui,sans-serif;
+  --body:Inter,system-ui,-apple-system,'Segoe UI',sans-serif;
+  --mono:'JetBrains Mono',ui-monospace,Menlo,monospace;
+  --gutter:clamp(16px,4vw,40px);
+  --section-pad:clamp(64px,9vw,112px);
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--page);color:var(--screen-light);font:17px/1.55 var(--body);overflow-x:hidden}
+img,video{display:block;max-width:100%}
+a{color:var(--fire)} a:hover{color:var(--fire-hover)}
+a:focus-visible,button:focus-visible{outline:3px solid var(--fire-hover);outline-offset:3px;border-radius:4px}
+.pix{image-rendering:pixelated}
+p,h1,h2,h3,dd,figure{margin:0}
+.wrap{max-width:1200px;margin-inline:auto;padding-inline:var(--gutter)}
+.section{border-top:1px solid var(--rule-soft);padding-block:var(--section-pad)}
+.h2{font:700 clamp(36px,5vw,56px)/1.02 var(--display);letter-spacing:-0.02em;color:var(--paper)}
+.h2-sm{font:700 clamp(30px,4vw,40px)/1.05 var(--display);letter-spacing:-0.01em;color:var(--paper)}
+.h3{font:700 22px/1.3 var(--display);color:var(--paper)}
+.lede{font-size:19px;color:var(--body-strong);text-wrap:pretty}
+.pretty{text-wrap:pretty}
+
+/* Buttons */
+.btn-fire{display:inline-flex;align-items:center;gap:10px;min-height:54px;padding:0 24px;background:var(--fire);color:var(--page);font:700 18px/1 var(--display);text-decoration:none;border-radius:6px}
+.btn-fire:hover{background:var(--fire-hover);color:var(--page)}
+.btn-fire.sm{min-height:48px;padding:0 20px;font-size:17px;margin-top:10px}
+.btn-ghost{display:inline-flex;align-items:center;gap:8px;min-height:44px;color:var(--screen-light);font-weight:500;text-decoration:underline;text-underline-offset:4px;text-decoration-thickness:1px}
+.btn-ghost:hover{color:var(--paper)}
+
+/* Hero */
+.hero{
+  background-color:var(--page);
+  background-image:
+    radial-gradient(ellipse 50% 60% at 72% 45%,rgba(239,80,35,.13),rgba(239,80,35,0) 70%),
+    radial-gradient(rgba(177,175,168,.28) 1px,transparent 1.6px),
+    radial-gradient(rgba(177,175,168,.18) 1px,transparent 1.6px);
+  background-size:auto,97px 89px,131px 113px;
+  background-position:0 0,11px 17px,53px 41px;
+  padding-block:clamp(16px,5vw,64px) clamp(48px,7vw,88px);
+}
+.hero-row{display:flex;flex-direction:row-reverse;flex-wrap:wrap;align-items:center;gap:40px 48px}
+.hero-device{flex:1 1 560px;min-width:0;max-width:720px;width:100%;margin-inline:auto}
+.hero-copy{flex:1 1 400px;min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:28px}
+.wordmark{padding:18px 20px;background:var(--screen-dark);border-radius:6px;max-width:100%;line-height:0}
+.wordmark img{width:478px;height:auto}
+.intro{font-size:clamp(19px,2vw,22px);line-height:1.5;color:var(--body-strong);max-width:34ch;text-wrap:pretty}
+.cta-row{display:flex;flex-wrap:wrap;align-items:center;gap:12px 28px}
+.meta{font:14px var(--mono);letter-spacing:.02em;color:var(--muted)}
+
+/* Device: the 1600x1600 photo space is cropped to x 100–1560, y 140–1440 and scaled to the frame. */
+.device-frame{--s:.449;position:relative;width:100%;aspect-ratio:1460/1300;overflow:hidden}
+.device{position:absolute;top:0;left:0;width:1600px;height:1600px;transform-origin:0 0;transform:scale(var(--s)) translate(-100px,-140px)}
+.device > picture > img{position:absolute;inset:0;width:1600px;height:1600px;max-width:none}
+.device video,.device .glass{position:absolute;top:0;left:0;width:400px;height:240px;max-width:none;transform-origin:0 0;
+  transform:matrix3d(1.896506,0.026029,0,-0.000077,0.005046,2.366709,0,0.000005,0,0,1,0,165,228,0,1)}
+.device video{object-fit:fill;image-rendering:pixelated}
+.device .glass{pointer-events:none;background:linear-gradient(128deg,rgba(255,255,255,.09) 0%,rgba(255,255,255,.05) 34%,rgba(255,255,255,0) 52%)}
+.device-still{width:109.589%;height:auto;max-width:none;margin:-9.589% 0 0 -6.849%}
+html:not(.js) .device{display:none}
+html.js .device-still{display:none}
+.play-btn{position:absolute;left:calc(459px * var(--s));top:calc(390px * var(--s));width:64px;height:64px;margin:-32px 0 0 -32px;display:flex;align-items:center;justify-content:center;border:0;border-radius:50%;background:var(--fire);color:var(--page);cursor:pointer}
+.play-btn:hover{background:var(--fire-hover)}
+[hidden]{display:none !important}
+
+/* How it plays: every sprite at 4x native (2x on phones) */
+.how{display:flex;flex-direction:column;gap:40px}
+.how-head{display:flex;flex-direction:column;gap:14px;max-width:640px}
+.scene-panel{background:var(--screen-dark);border-radius:12px;padding:clamp(24px,4vw,48px) clamp(16px,3vw,40px) clamp(16px,3vw,32px);overflow:hidden}
+.scene{display:flex;align-items:flex-end;justify-content:center;gap:clamp(16px,4vw,56px)}
+.scene-building{position:relative;width:160px;height:440px;overflow:hidden;flex:none}
+.scene-building img{position:absolute;left:0;bottom:0;width:640px;height:800px;max-width:none}
+.scene-ambulance{width:160px;flex:none;display:flex;align-items:flex-end}
+.scene-ambulance img{width:160px;height:120px}
+.ground{height:4px;margin-top:2px;background:repeating-linear-gradient(90deg,var(--screen-light) 0 4px,transparent 4px 8px)}
+.diagram{position:relative;flex:none;width:480px;height:440px}
+.diagram svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.diagram-label{position:absolute;top:0;font:13px var(--mono);color:var(--paper)}
+.diagram-label.l{left:0}.diagram-label.c{left:50%;transform:translateX(-50%)}.diagram-label.r{right:0}
+.net-wrap{position:absolute;bottom:0;left:144px;width:192px;height:80px;overflow:hidden}
+.net-wrap img{width:768px;height:80px;max-width:none}
+.jumper{position:absolute;left:210px;top:340px;width:60px;height:60px;
+  background:url(assets/art/victim-table-15-15-lcd@8x.png) 0 0/240px 60px no-repeat;image-rendering:pixelated;
+  --sheet:-240px;--rise:-240px;animation:flail .5s steps(4) infinite,bounce 1.6s steps(16) infinite}
+@keyframes flail{to{background-position:var(--sheet) 0}}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(var(--rise))}}
+.aim-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr));gap:24px 40px}
+.aim-grid > div{display:flex;flex-direction:column;gap:8px}
+.express{padding-top:28px;border-top:1px solid var(--rule);font:500 clamp(20px,2.4vw,26px)/1.35 var(--display);color:var(--paper);text-wrap:pretty}
+.express strong{color:var(--fire);font-weight:700}
+
+/* The climb */
+.climb{display:flex;flex-wrap:wrap;gap:48px 64px;align-items:flex-start}
+.climb-copy{flex:1 1 360px;min-width:0;display:flex;flex-direction:column;gap:20px}
+.climb-copy .fair{margin-top:12px;padding-top:20px;border-top:1px solid var(--rule)}
+.facts{flex:1.2 1 460px;min-width:0;margin:0;display:grid;grid-template-columns:max-content minmax(0,1fr);column-gap:32px;border-bottom:1px solid var(--rule)}
+.facts dt,.facts dd{padding:20px 0;border-top:1px solid var(--rule)}
+.facts dt{font:700 20px/1.4 var(--display);color:var(--paper)}
+.facts dd{font-size:18px}
+.facts strong{color:var(--paper)}
+
+/* Screenshots */
+.shots{display:flex;flex-direction:column;gap:32px}
+.shot-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(440px,100%),1fr));gap:40px 24px}
+.shot-grid figure{display:flex;flex-direction:column;gap:14px}
+.bezel{background:#0f0e0b;border:1px solid #36342c;border-radius:10px;padding:10px}
+.bezel img{width:100%;height:auto;aspect-ratio:5/3}
+figcaption{font-size:16px}
+
+/* Install (light section) */
+.paper{background:var(--paper);color:#2a2924;padding-block:var(--section-pad)}
+.paper a{color:var(--fire-on-paper)} .paper a:hover{color:var(--fire-on-paper-hover)}
+.paper .btn-fire{color:var(--page)}
+.paper .h2{color:var(--page)}
+.install{display:flex;flex-wrap:wrap;gap:40px 72px;align-items:flex-start}
+.install-intro{flex:1 1 340px;min-width:0;display:flex;flex-direction:column;gap:16px}
+.install-intro p{font-size:19px;text-wrap:pretty}
+.install-intro img{width:100%;max-width:460px;height:auto;margin-top:24px}
+.install-steps{flex:1.5 1 520px;min-width:0;display:flex;flex-direction:column;gap:28px}
+.steps{list-style:none;margin:0;padding:0;counter-reset:step}
+.steps li{counter-increment:step;display:grid;grid-template-columns:52px minmax(0,1fr);gap:16px;padding:24px 0;border-top:1px solid #cfcdc5}
+.steps li:first-child{border-top:2px solid var(--page)}
+.steps li:last-child{border-bottom:1px solid #cfcdc5}
+.steps li::before{content:counter(step);font:500 24px/1.2 var(--mono);color:var(--fire-on-paper)}
+.steps li > div{display:flex;flex-direction:column;gap:6px;align-items:flex-start}
+.steps h3{font:700 21px/1.3 var(--display);color:var(--page)}
+.steps code{font:15px var(--mono);background:#e6e5de;padding:2px 6px;border-radius:4px}
+.small-print{font-size:15px;color:#4a4943;text-wrap:pretty}
+
+/* Questions */
+.faq{display:flex;flex-direction:column;gap:32px}
+.faq-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(420px,100%),1fr));gap:32px 64px}
+.faq-grid > div{display:flex;flex-direction:column;gap:6px;padding-top:20px;border-top:1px solid var(--rule)}
+.faq-grid h3{font:700 20px/1.3 var(--display);color:var(--paper)}
+
+/* Footer */
+.footer{border-top:1px solid var(--rule);padding-block:40px 56px;font-size:15px}
+.footer .wrap{display:flex;flex-direction:column;gap:14px}
+.footer-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px 32px}
+.footer-row img{width:30px;height:30px}
+.footer-links{display:flex;flex-wrap:wrap;gap:4px 12px}
+.made{color:var(--body-strong)} .made strong{color:var(--paper)}
+.tm{font-size:14px;color:var(--muted);max-width:72ch}
+
+@media (max-width:700px){
+  .device-frame{aspect-ratio:1460/1000;-webkit-mask-image:linear-gradient(#000 76%,transparent);mask-image:linear-gradient(#000 76%,transparent)}
+  .diagram{width:240px;height:220px}
+  .net-wrap{left:72px;width:96px;height:40px}
+  .net-wrap img{width:384px;height:40px}
+  .jumper{left:105px;top:170px;width:30px;height:30px;background-size:120px 30px;--sheet:-120px;--rise:-120px}
+  .scene-building,.scene-ambulance{display:none}
+}
+@media (prefers-reduced-motion:reduce){
+  .jumper{animation:none}
+}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap hero-row">
+
+    <div class="hero-device">
+      <div class="device-frame">
+        <!-- No-JS fallback: the same photo, cropped with CSS only. -->
+        <picture>
+          <source srcset="assets/device-hero.webp" type="image/webp">
+          <img class="device-still" src="assets/device-hero.png" alt="Crank &amp; Catch running on a Playdate" width="1600" height="1600">
+        </picture>
+        <div class="device">
+          <picture>
+            <source srcset="assets/device-hero.webp" type="image/webp">
+            <img src="assets/device-hero.png" alt="Crank &amp; Catch running on a Playdate" width="1600" height="1600">
+          </picture>
+          <video autoplay muted loop playsinline preload="metadata"
+                 poster="assets/video/crank-and-catch-screen-poster-400x240.png"
+                 aria-label="Crank &amp; Catch gameplay: catching jumpers and bouncing them to the ambulance">
+            <source src="assets/video/crank-and-catch-screen-400x240.webm" type="video/webm">
+            <source src="assets/video/crank-and-catch-screen-400x240.mp4" type="video/mp4">
+          </video>
+          <div class="glass" aria-hidden="true"></div>
+        </div>
+        <button class="play-btn" type="button" aria-label="Play the gameplay video" hidden>
+          <svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z" fill="currentColor"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="hero-copy">
+      <h1 class="wordmark"><img class="pix" src="assets/art/title-lcd@4x.png" alt="Crank &amp; Catch: bounce to safety" width="956" height="212"></h1>
+      <p class="intro">People are jumping from a burning building. Turn the crank to slide the net under them, and bounce them across the street to the ambulance.</p>
+      <div class="cta-row">
+        <a class="btn-fire" href="https://github.com/mrballistic/playdate-crank-and-catch/releases/latest/download/CrankAndCatch.pdx.zip">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="square" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>
+          <span>Download for Playdate</span>
+        </a>
+        <a class="btn-ghost" href="#install">
+          <span>How to install</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="square" aria-hidden="true"><path d="M12 5v14M6 13l6 6 6-6"/></svg>
+        </a>
+      </div>
+      <p class="meta">Free · Version 0.6 · For <a href="https://play.date">Playdate</a></p>
+    </div>
+
+  </div>
+</header>
+
+<main>
+
+<section class="section" aria-labelledby="how-h">
+  <div class="wrap how">
+    <div class="how-head">
+      <h2 id="how-h" class="h2">Aim with the net</h2>
+      <p class="lede">Every catch bounces your jumper back into the air, and where they land on the net decides where they go next.</p>
+    </div>
+
+    <div class="scene-panel">
+      <div class="scene">
+        <div class="scene-building" aria-hidden="true">
+          <img class="pix" src="assets/art/building-table-40-200-lcd@3x.png" alt="">
+        </div>
+        <div class="diagram" role="img" aria-label="Diagram of the net: landing on the left side bounces a jumper back toward the building, the center sends them straight up, and the right side throws them long toward the ambulance">
+          <svg viewBox="0 0 480 440" aria-hidden="true">
+            <defs>
+              <marker id="ah" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M1 1L8 5L1 9" fill="none" stroke="#ef5023" stroke-width="2" stroke-linecap="square"/></marker>
+            </defs>
+            <path d="M182 384 Q 100 200 24 84" fill="none" stroke="#ef5023" stroke-width="4" stroke-dasharray="8 8" marker-end="url(#ah)"/>
+            <path d="M240 326 L240 62" fill="none" stroke="#ef5023" stroke-width="4" stroke-dasharray="8 8" marker-end="url(#ah)"/>
+            <path d="M298 384 Q 400 140 462 112" fill="none" stroke="#ef5023" stroke-width="4" stroke-dasharray="8 8" marker-end="url(#ah)"/>
+          </svg>
+          <span class="diagram-label l" aria-hidden="true">Left side</span>
+          <span class="diagram-label c" aria-hidden="true">Center</span>
+          <span class="diagram-label r" aria-hidden="true">Right side</span>
+          <div class="jumper" aria-hidden="true"></div>
+          <div class="net-wrap" aria-hidden="true"><img class="pix" src="assets/art/firefighters-table-48-20-lcd@6x.png" alt=""></div>
+        </div>
+        <div class="scene-ambulance" aria-hidden="true">
+          <img class="pix" src="assets/art/ambulance-lcd@6x.png" alt="">
+        </div>
+      </div>
+      <div class="ground" aria-hidden="true"></div>
+    </div>
+
+    <div class="aim-grid">
+      <div>
+        <h3 class="h3">Left side</h3>
+        <p class="pretty">Back toward the fire. The building bounces them back, so it’s not over yet.</p>
+      </div>
+      <div>
+        <h3 class="h3">Center</h3>
+        <p class="pretty">Nearly straight up. Safe and slow, and handy for holding one jumper while you deal with another.</p>
+      </div>
+      <div>
+        <h3 class="h3">Right side</h3>
+        <p class="pretty">A long throw toward the ambulance. Fewer bounces, more risk.</p>
+      </div>
+    </div>
+
+    <p class="express">Get someone to the ambulance in two bounces or fewer for an <strong>Express</strong> bonus.</p>
+  </div>
+</section>
+
+<section class="section" aria-labelledby="climb-h">
+  <div class="wrap climb">
+    <div class="climb-copy">
+      <h2 id="climb-h" class="h2">It gets harder. Fairly.</h2>
+      <p class="lede">The net starts wide and forgiving, then narrows as your score climbs. A second jumper joins at 500 points, a third at 2,000, and everything speeds up as you go.</p>
+      <p class="fair pretty">Extra jumpers only leap when you could actually reach them. If two land at once, it’s because of where you aimed.</p>
+    </div>
+    <dl class="facts">
+      <dt>Rescue</dt>
+      <dd><strong>100 points</strong>, worth more as the game speeds up (up to 160)</dd>
+      <dt>Express</dt>
+      <dd><strong>+50</strong> for a rescue in two bounces or fewer</dd>
+      <dt>Extra life</dt>
+      <dd><strong>Every 5,000 points</strong>, up to five</dd>
+      <dt>Net</dt>
+      <dd><strong>72 px wide</strong> at the start, down to 44 px</dd>
+    </dl>
+  </div>
+</section>
+
+<section class="section" aria-labelledby="shots-h">
+  <div class="wrap shots">
+    <h2 id="shots-h" class="h2-sm">Screenshots</h2>
+    <div class="shot-grid">
+      <figure>
+        <div class="bezel"><img class="pix" src="assets/screenshots/01-menu-lcd@3x.png" width="1200" height="720" loading="lazy" alt="The Crank &amp; Catch title screen, with the attract-mode demo playing behind the menu"></div>
+        <figcaption>The menu plays itself while you decide.</figcaption>
+      </figure>
+      <figure>
+        <div class="bezel"><img class="pix" src="assets/screenshots/03-express-lcd@3x.png" width="1200" height="720" loading="lazy" alt="A jumper lands at the ambulance and “EXPRESS +150” appears above it"></div>
+        <figcaption>Two bounces or fewer: Express.</figcaption>
+      </figure>
+      <figure>
+        <div class="bezel"><img class="pix" src="assets/screenshots/04-net-narrows-lcd@3x.png" width="1200" height="720" loading="lazy" alt="Score popups stacked above the net as it narrows for the first time"></div>
+        <figcaption>Every 500 points, the net gets a little narrower.</figcaption>
+      </figure>
+      <figure>
+        <div class="bezel"><img class="pix" src="assets/screenshots/05-late-game-lcd@3x.png" width="1200" height="720" loading="lazy" alt="Late in a game, past 1,000 points, with a narrower net"></div>
+        <figcaption>Later on, the sky gets busy.</figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<section id="install" class="paper" aria-labelledby="install-h">
+  <div class="wrap install">
+    <div class="install-intro">
+      <h2 id="install-h" class="h2">Get it on your Playdate</h2>
+      <p>Crank &amp; Catch installs over Wi‑Fi from your Playdate account. It takes about a minute.</p>
+      <img src="assets/playdate-closed.webp" width="1200" height="496" loading="lazy" alt="A Playdate with its cover closed, crank folded in">
+    </div>
+    <div class="install-steps">
+      <ol class="steps">
+        <li>
+          <div>
+            <h3>Download the game.</h3>
+            <p>Get <code>CrankAndCatch.pdx.zip</code>. Don’t unzip it.</p>
+            <a class="btn-fire sm" href="https://github.com/mrballistic/playdate-crank-and-catch/releases/latest/download/CrankAndCatch.pdx.zip">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="square" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>
+              <span>Download for Playdate</span>
+            </a>
+          </div>
+        </li>
+        <li>
+          <div>
+            <h3>Make sure your Playdate is registered</h3>
+            <p class="pretty">It needs to be registered to your account at play.date. Wireless installs only work with a registered device.</p>
+          </div>
+        </li>
+        <li>
+          <div>
+            <h3>Upload it.</h3>
+            <p class="pretty">Sign in at <strong>play.date</strong>, open <a href="https://play.date/account/sideload/"><strong>Account → Sideload</strong></a>, and drop in the zip.</p>
+          </div>
+        </li>
+        <li>
+          <div>
+            <h3>Open Game Library on your Playdate.</h3>
+            <p class="pretty">The game downloads automatically; refresh the list if it doesn’t show up right away. On older system software, look under <strong>Settings → Games</strong>.</p>
+          </div>
+        </li>
+      </ol>
+      <p class="small-print">Prefer a cable? <a href="https://panic.com">Panic</a>’s guide covers installing over USB too: <a href="https://help.play.date/games/sideloading/">help.play.date</a>. Sideloaded games stay in your account, so you can reinstall any time.</p>
+    </div>
+  </div>
+</section>
+
+<section aria-labelledby="faq-h" style="padding-block:var(--section-pad)">
+  <div class="wrap faq">
+    <h2 id="faq-h" class="h2-sm">Questions</h2>
+    <div class="faq-grid">
+      <div><h3>Is it free?</h3><p>Yes. It’s open source under the MIT license.</p></div>
+      <div><h3>Is this made by Panic?</h3><p>No. It’s an independent game by Todd Greco, made for Playdate.</p></div>
+      <div><h3>What does it need?</h3><p>A Playdate on current system software, connected to Wi‑Fi.</p></div>
+      <div><h3>Where’s the source?</h3><p>On <a href="https://github.com/mrballistic/playdate-crank-and-catch">GitHub</a>.</p></div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="footer">
+  <div class="wrap">
+    <div class="footer-row">
+      <img class="pix" src="assets/art/jumper-frame1-lcd@8x.png" alt="" aria-hidden="true">
+      <p class="made">Made by <strong>Todd Greco</strong> · <a href="https://mrballistic.com">mrballistic.com</a></p>
+      <p class="footer-links"><a href="https://github.com/mrballistic/playdate-crank-and-catch">Source on GitHub</a><span aria-hidden="true">·</span><a href="https://github.com/mrballistic/playdate-crank-and-catch/releases">All releases</a><span aria-hidden="true">·</span><span>MIT license</span></p>
+    </div>
+    <p class="tm">Playdate is a registered trademark of Panic Inc. Crank &amp; Catch is an independent game and is not affiliated with or endorsed by Panic.</p>
+  </div>
+</footer>
+
+<script>
+(() => {
+  const frame = document.querySelector('.device-frame');
+  const video = frame.querySelector('video');
+  const glass = frame.querySelector('.glass');
+  const btn = frame.querySelector('.play-btn');
+
+  // Scale the 1600px photo space to the frame (crop is 1460px wide).
+  if ('ResizeObserver' in window) {
+    new ResizeObserver(([e]) => frame.style.setProperty('--s', e.contentRect.width / 1460)).observe(frame);
+  }
+
+  // Reduced motion: show the still composite and a play button instead of autoplay.
+  const mq = matchMedia('(prefers-reduced-motion: reduce)');
+  let userPlayed = false;
+  const apply = () => {
+    const still = mq.matches && !userPlayed;
+    video.hidden = glass.hidden = still;
+    btn.hidden = !still;
+    if (still) video.pause();
+    else { video.muted = true; video.play().catch(() => {}); }
+  };
+  btn.addEventListener('click', () => { userPlayed = true; apply(); video.focus(); });
+  mq.addEventListener ? mq.addEventListener('change', apply) : mq.addListener(apply);
+  apply();
+})();
+</script>
+</body>
+</html>

@@ -89,6 +89,7 @@ The smoke-test stubs accept any Playdate API call, so they can't catch a misspel
 | `scripts/check_art.py` | Verifies every PNG is strictly 1-bit and that animation sheets divide into whole frames. Run with `uv run --with pillow python scripts/check_art.py`. |
 | `scripts/make_title.py` | Crops the title lettering from the launcher card into `source/images/title.png` for the menu. Re-run after changing the card. |
 | `scripts/prep_sounds.py` | Converts source audio (MP3, AIFF, M4A) into trimmed 16-bit mono WAVs for the game. |
+| `scripts/check_page.py` | Lints `www/index.html` with the standard library: nesting, duplicate or missing ids, heading order, image alt text, and straight quotes in visible text. |
 | `scripts/install_device.sh` | USB install, described above. |
 
 ## Project layout

@@ -16,9 +16,11 @@
 # run from main (or any branch, or a fork) can't reach the secrets at all.
 # That matters because this repo is public.
 #
-# Server access: deploys as crank-deploy, an unprivileged user (no sudo) that
-# owns only /var/www/html/crank-and-catch. SSH_PRIVATE_KEY and SSH_KNOWN_HOSTS
-# live in the `website` environment. Setup steps: docs/web/DEPLOY.md.
+# Server access: deploys as raid-deploy, the same unprivileged user (no sudo)
+# and key as the RAID page; it owns only /var/www/html/raid and
+# /var/www/html/crank-and-catch. SSH_PRIVATE_KEY and SSH_KNOWN_HOSTS live in
+# this repo's `website` environment (same values as RaidCalculator2's; GitHub
+# secrets can't be shared between personal repos). Setup: docs/web/DEPLOY.md.
 name: Deploy website
 
 on:
@@ -41,7 +43,7 @@ concurrency:
 
 env:
   DEPLOY_HOST: 132.148.79.144
-  DEPLOY_USER: crank-deploy
+  DEPLOY_USER: raid-deploy
   DEPLOY_PATH: /var/www/html/crank-and-catch
 
 jobs:
