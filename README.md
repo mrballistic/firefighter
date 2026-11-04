@@ -51,13 +51,13 @@ scripts/build.sh --test   # tests only; no SDK required
 
 ## Installing on a Playdate
 
-**Sideloading (recommended).** Download `CrankAndCatch.pdx.zip` from the [latest release](https://github.com/mrballistic/firefighter/releases/latest), or zip your own build:
+**Sideloading (recommended).** Download `CrankAndCatch.pdx.zip` from the [latest release](https://github.com/mrballistic/playdate-crank-and-catch/releases/latest), or zip your own build:
 
 ```bash
 cd build && zip -r CrankAndCatch.pdx.zip CrankAndCatch.pdx
 ```
 
-Upload the zip at [play.date/account/sideload](https://play.date/account/sideload/), then open **Settings > Games** on the Playdate; the device downloads it over Wi-Fi.
+Your Playdate must be registered to your play.date account. Upload the zip at [play.date/account/sideload](https://play.date/account/sideload/), then open **Game Library** on the Playdate (on older system software, **Settings > Games**) and refresh if needed; the device downloads it over Wi-Fi.
 
 **USB.** `scripts/install_device.sh` puts a connected Playdate into data-disk mode, copies the game into `/Games` and launches it. The Playdate must be unlocked and connected with a data-capable cable. Computers whose endpoint security blocks USB storage will refuse the disk ("The disk you attached was not readable"); use sideloading on those. Never choose **Initialize** in that dialog: it erases the Playdate's games and saves.
 
@@ -80,6 +80,8 @@ The smoke-test stubs accept any Playdate API call, so they can't catch a misspel
 | `scripts/tune.lua` | Sweeps bounce speed and angle settings and reports bounces-to-rescue for each aim. Use it before changing the physics constants. |
 | `scripts/fairness.lua` | Simulates the multi-jumper stages at a capped crank speed and reports misses per minute and how many no player could have avoided. `FAIR_OFF=1` gives a baseline without fair spawning. |
 | `scripts/screenshots.sh` | Captures screenshots from the simulator. A driver in `scripts/capture/` plays a copy of the game and saves frames at set moments into `screenshots/`, at 400x240 and 800x480. |
+| `scripts/video.sh` | Records a 48-second gameplay video from the simulator (same driver, video mode) and encodes it for the web into `site/assets/video/`: MP4 and WebM in Playdate screen tones and pure 1-bit, a native-size variant for overlaying on a device photo, posters and a GIF. Needs ffmpeg. |
+| `scripts/site_assets.py` | Builds the web page's static assets into `site/assets/`: screenshots, upscaled art, favicons, a social preview image and a 21:9 banner. |
 | `scripts/check_art.py` | Verifies every PNG is strictly 1-bit and that animation sheets divide into whole frames. Run with `uv run --with pillow python scripts/check_art.py`. |
 | `scripts/make_title.py` | Crops the title lettering from the launcher card into `source/images/title.png` for the menu. Re-run after changing the card. |
 | `scripts/prep_sounds.py` | Converts source audio (MP3, AIFF, M4A) into trimmed 16-bit mono WAVs for the game. |
@@ -104,6 +106,7 @@ source/
 tests/                   Unit, playability and smoke tests
 scripts/                 Build, install, tuning, fairness, screenshot and asset tools
 screenshots/             Captured from the simulator
+site/                    Web page design brief (BRIEF.md) and assets for mrballistic.com/crank-and-catch
 docs/                    Art and sound specification; source audio
 memory_bank/             Design and implementation notes
 ```

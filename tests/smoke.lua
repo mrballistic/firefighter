@@ -18,6 +18,8 @@ local WITH_ART = os.getenv("SMOKE_ART") == "1"
 
 -- Recorded output ------------------------------------------------------------
 local texts = {}        -- text drawn this frame
+local aligned = {}      -- {t, x, y} for centered text (popups) this frame
+local popupOverlaps = 0 -- frames where two popups were drawn on top of each other
 local saved = nil       -- last datastore.write
 local soundsPlayed = {}
 
@@ -126,7 +128,10 @@ local gfx = setmetatable({
     }, { __index = function(_, k) return Sprite[k] or stub() end }),
     drawText = function(t) table.insert(texts, t) end,
     getTextSize = function(t) return #t * 8, 18 end,
-    drawTextAligned = function(t) table.insert(texts, t) end,
+    drawTextAligned = function(t, x, y)
+        table.insert(texts, t)
+        table.insert(aligned, { t = t, x = x, y = y })
+    end,
 }, Stub)
 
 local timers = {}
@@ -182,7 +187,17 @@ end
 -- Harness -----------------------------------------------------------------------
 local function frame()
     texts = {}
+    aligned = {}
     playdate.update()
+    for i = 1, #aligned do
+        for j = i + 1, #aligned do
+            local a, b = aligned[i], aligned[j]
+            local wa, wb = #a.t * 8, #b.t * 8
+            if math.abs(a.y - b.y) < 16 and math.abs(a.x - b.x) < (wa + wb) / 2 then
+                popupOverlaps = popupOverlaps + 1
+            end
+        end
+    end
     input.justA, input.justB = false, false
 end
 
@@ -369,6 +384,8 @@ live = {}
 import("main")
 frame()
 check(waitForHighScore() == final, "high score survives relaunch")
+
+check(popupOverlaps == 0, "popups never drawn on top of each other (" .. popupOverlaps .. " frames)")
 
 print(string.format("\n%d passed, %d failed", passed, failed))
 os.exit(failed == 0 and 0 or 1)

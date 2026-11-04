@@ -13,20 +13,10 @@ cd "$(dirname "$0")/.."
 ROOT="$(pwd)"
 
 SDK="${PLAYDATE_SDK_PATH:-$HOME/Developer/PlaydateSDK}"
-SRC="build/capture-src"
-PDX="build/CrankAndCatchCapture.pdx"
 OUT="$ROOT/screenshots"
 SHOTS=(01-menu 02-two-up)
 
-mkdir -p "$OUT" build
-rsync -a --delete --exclude '*.mp3' source/ "$SRC/"
-cp scripts/capture/capture_driver.lua "$SRC/capture_driver.lua"
-printf 'CAPTURE_OUT = "%s"\n' "$OUT" > "$SRC/capture_config.lua"
-printf '\nimport "capture_driver"\n' >> "$SRC/main.lua"
-# Own bundle ID, so the capture run never touches the real game's saved data.
-sed -i '' 's/^bundleID=.*/bundleID=com.mrballistic.crankandcatch.capture/; s/^name=.*/name=Crank \& Catch (capture)/' "$SRC/pdxinfo"
-
-"$SDK/bin/pdc" "$SRC" "$PDX"
+PDX="$(scripts/capture/build_capture.sh shots "$OUT" | tail -1)"
 
 # Only files written after this moment count as this run's output.
 STAMP="$(date +%s)"
