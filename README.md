@@ -113,7 +113,6 @@ scripts/                 Build, install, tuning, fairness, screenshot and asset 
 screenshots/             Captured from the simulator
 www/                     The web page as deployed to mrballistic.com/crank-and-catch (index.html + assets/)
 docs/                    Art and sound specification, source audio, web page brief (docs/web/)
-memory_bank/             Design and implementation notes
 ```
 
 ## Design notes
@@ -126,7 +125,7 @@ memory_bank/             Design and implementation notes
 
 ## Art and audio
 
-All art is original 1-bit pixel art in `source/images/`. The building, firefighters, jumpers and roof smoke are animated with 4-frame sheets. The bounce and splat effects are samples in `source/sounds/`, and other effects are synthesized. Any missing image or sound falls back to a placeholder drawn in code or a synthesized tone, so assets can be replaced one file at a time. Sizes, formats and requirements are in [`docs/art-brief.md`](docs/art-brief.md).
+All art is original 1-bit pixel art in `source/images/`. The building, firefighters, jumpers and roof smoke are animated with 4-frame sheets. The bounce and splat effects are samples in `source/sounds/`, and other effects are synthesized. Any missing image or sound falls back to a placeholder drawn in code or a synthesized tone, so assets can be replaced one file at a time. A replacement must match the existing file's pixel size and stay strictly 1-bit (`scripts/check_art.py` checks both); sounds should be 16-bit PCM or IMA-ADPCM WAV (`scripts/prep_sounds.py` converts other formats).
 
 ## License
 
